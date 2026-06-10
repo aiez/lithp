@@ -23,7 +23,7 @@ sbcl --script fft-nice.lisp --grows  # timing benchmark
 
 **Sections:** [NAME](#name) | [SYNOPSIS](#synopsis) | [KIT](#the-kit-five-constructs) | [UTILITIES](#utilities) | [FILES](#files) | [LICENSE](#license)
 
-**Files:** [lib-.lisp](#file-lib--lisp) | [blog.md](#file-blog-md) | [fft-nice.lisp](#file-fft-nice-lisp) | [fft-small.lisp](#file-fft-small-lisp) | [fft-2small.lisp](#file-fft-2small-lisp) | [fft-yuck.lisp](#file-fft-yuck-lisp) | [tiny.lisp](#file-tiny-lisp) | [tiny.vim](#file-tiny-vim) | [Makefile](#file-makefile)
+**Files:** [lib-.lisp](#file-lib-lisp) | [blog.md](#file-blog-md) | [fft-nice.lisp](#file-fft-nice-lisp) | [fft-small.lisp](#file-fft-small-lisp) | [fft-2small.lisp](#file-fft-2small-lisp) | [fft-yuck.lisp](#file-fft-yuck-lisp) | [tiny.lisp](#file-tiny-lisp) | [tiny.vim](#file-tiny-vim) | [Makefile](#file-makefile)
 
 ## NAME
 
