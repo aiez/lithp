@@ -2,16 +2,13 @@
 # knobs only; shared targets live in $(KONFIG)/Makefile
 KONFIG ?= ../konfig
 
-APP   := plus
-MAIN  := plus.lisp
+APP   := lisp-
+MAIN  := fft-nice.lisp
 EXT   := lisp
 LANG  := lisp
-# lib.lisp uses plus's @ reader + let+/f+ macros, so load plus
-# before compiling lib.
 LINT  := sbcl --noinform --disable-debugger \
            --eval '(handler-bind ((warning (function muffle-warning))) \
-                     (compile-file "plus.lisp") (load "plus.lisp") \
-                     (compile-file "lib.lisp"))' \
+                     (compile-file "lib-.lisp"))' \
            --quit
 TOOLS := sbcl:run-lisp
 PKG   := sbcl gawk neovim tmux
@@ -20,30 +17,15 @@ $(KONFIG)/Makefile:
 	@test -f $@ || { echo "missing konfig: git clone http://tiny.cc/konfig $(KONFIG)"; exit 1; }
 -include $(KONFIG)/Makefile
 
-# ---- run: load plus.lisp into an SBCL repl ------------------------
-run: ## load plus.lisp + lib.lisp into an interactive SBCL repl
+# ---- run: the ablation suite --------------------------------------
+run: ## run the sweet-spot version
 	$(call need,sbcl,run)
-	@sbcl --noinform --load plus.lisp --load lib.lisp
+	@sbcl --script fft-nice.lisp
 
-# ---- pdf: color via our plus.ssh ----------------------------------
-# a2ps auto-maps *.lisp -> clisp; pretty-print=plus loads our sheet
-# (clisp + $field/@key/plus-macro highlighting). Dense 3-col, width-
-# filled layout (xfun-style) so the page looks packed, not washed-out.
-Cols   ?= 3
-Cpl    ?= 90
-Orient ?= landscape
-
-~/tmp/%.pdf : %.lisp plus.ssh ## colorful lisp pdf (a2ps + plus.ssh)
-	$(call need,a2ps,pdf)
-	$(call need,ps2pdf,pdf)
-	@mkdir -p ~/tmp
-	@echo "pdfing : $@ ..."
-	@D=$$(mktemp -d); trap "rm -rf $$D" EXIT; \
-	 mkdir -p $$D/.a2ps; cp plus.ssh $$D/.a2ps/plus.ssh; \
-	 HOME=$$D a2ps -Br --$(Orient) --line-numbers=1 \
-	   -borders=no --pro=color \
-	   --file-align=fill --chars-per-line=$(Cpl) \
-	   --right-footer="" --left-footer="$<" \
-	   --footer="page %p." -M letter \
-	   --columns $(Cols) -o - $< | ps2pdf - $@
-	@$(OPEN) $@
+check: ## all four versions must print byte-identical output
+	$(call need,sbcl,check)
+	@sbcl --script fft-2small.lisp > /tmp/2small.out
+	@for f in small nice yuck; do \
+	   sbcl --script fft-$$f.lisp > /tmp/$$f.out; \
+	   diff -q /tmp/2small.out /tmp/$$f.out >/dev/null \
+	     && echo "$$f SAME" || echo "$$f DIFF"; done
