@@ -6,10 +6,8 @@ alt="QR: tiny.cc/lisp-"></a>
 
 *Just Enough LISP*
 
-So me and claude-fable-5 went for a walk one evening. This is where we got to.
-
--- Tim Menzies    
-(timm@ieee.org)
+One sunny day, me and claude-fable-5 went for a walk.    
+This is what we found. -- Tim Menzies  (timm@ieee.org)
 
 ## Motivation
 
