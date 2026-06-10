@@ -72,7 +72,7 @@ One function, yuck vs tiny:
                 (* weight delta (- value mean-value)))
           column))))
 ```
-Just enough:
+Too much (note the trick dollar read macros):
 ```lisp
 (def welford (i v &optional (w 1))
   (incf $n w)
@@ -80,6 +80,15 @@ Just enough:
       (let ((d (- v $mu)))
         (incf $mu (/ (* w d) $n))
         (incf $m2 (* w d (- v $mu))) i)))
+```
+Just right (everything here is standard lisp):
+```lisp
+defun welford (i v &optional (w 1))
+  (incf (n i) w)
+  (if (< (n i) 1) (num)
+      (let ((d (- v (mu i))))
+        (incf (mu i) (/ (* w d) (n i)))
+        (incf (m2 i) (* w d (- v (mu i)))) i)))
 ```
 
 Nothing below is about golfing yuck into tiny. It is
