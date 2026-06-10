@@ -1,0 +1,8 @@
+       _           
+ _ __ | |_   _ ___ 
+| '_ \| | | | / __|
+| |_) | | |_| \__ \
+| .__/|_|\__,_|___/
+|_|                
+tiny common lisp dialect. http://tiny.cc/lisp-plus
+"(parentheses are a feature, not a bug)."
