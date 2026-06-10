@@ -4,12 +4,11 @@
 src="https://tiny.cc/tiny/qr-image/tiny.cc~lisp-~l~150.png"
 alt="QR: tiny.cc/lisp-"></a>
 
-*Just Enough LISP*
-
+ 
 One sunny day, me and claude-fable-5 went for a walk.    
 This is what we found. -- Tim Menzies  (timm@ieee.org)
 
-## Motivation
+## Motivation: Just Enough LISP
 
 `fft.py` is 235 lines of Python: fast-frugal trees for
 multi-objective optimization (Welford stats, entropy-free
