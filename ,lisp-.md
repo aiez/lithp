@@ -11,7 +11,7 @@ constructs plus a handful of utilities, 130 lines total, no
 reader macros, no dependencies. Found by ablation: we wrote
 the same machine-learner four ways and kept only what paid
 rent. **The why, the data, and the style rules are in
-[blog.md](blog.md)** — this file is just the manual.
+ [blog.md](https://gist.github.com/timm/729164d89ae32ca4b6a83483be9e761b#file-blog-md)** — this file is just the manual.
 
 ```bash
 git clone http://tiny.cc/optimiz # access test data
