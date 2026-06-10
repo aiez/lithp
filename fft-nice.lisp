@@ -1,6 +1,6 @@
 ; vim: set ft=lisp ts=2 sw=2 et :
 ; fft-nice.lisp -- fft-small.lisp rebuilt on lib-.lisp:
-; plain ANSI CL plus only f_ ff_ ? let+ o ats, and a
+; plain ANSI CL plus only fn ? let+ o ats, and a
 ; local (my k) settings macro. No reader macros, no
 ; def/def+/!/{} sugar.
 ; (c) 2026 Tim Menzies timm@ieee.org, MIT license.
@@ -39,8 +39,8 @@
 
 (defmethod mix ((i hash-table) j &optional (w 1))
   (let ((out (o)))
-    (maphash (ff_ (incf (ats out _ 0) __)) i)
-    (maphash (ff_ (incf (ats out _ 0) (* w __))) j)
+    (maphash (fn (incf (ats out $1 0) $2)) i)
+    (maphash (fn (incf (ats out $1 0) (* w $2))) j)
     out))
 
 (defmethod mix ((i num) j &optional (w 1))
@@ -115,14 +115,14 @@
     (cuts-of c bins hi at)))
 
 (defmethod cuts-of ((c hash-table) bins hi at)
-  (mapcar (f_ (list at (ats hi _) (ats hi _)
-                    (ats bins _)))
+  (mapcar (fn (list at (ats hi $1) (ats hi $1)
+                    (ats bins $1)))
           (keys bins)))
 
 (defmethod cuts-of ((c num) bins hi at)
   (let ((l (num)))
-    (mapcar (f_ (setf l (mix l (ats bins _)))
-                (list at (- big) (ats hi _) l))
+    (mapcar (fn (setf l (mix l (ats bins $1)))
+                (list at (- big) (ats hi $1) l))
             (butlast (sort (keys bins) #'<)))))
 
 ;;; 4. grow trees ----------------------------------------------
@@ -142,15 +142,15 @@
 (defun splits (i y root)
   (let+ ((enough (expt (length (rows root)) .33))
          (cs (remove-if
-               (f_ (<= (n (fourth _)) enough))
+               (fn (<= (n (fourth $1)) enough))
                (cuts i (rows i) y))))
     (when cs
       (loop for (bit pick) in `((0 ,#'least) (1 ,#'most))
             append
         (let+ (((at lo hi leaf)
-                (funcall pick cs (f_ (mu (fourth _)))))
+                (funcall pick cs (fn (mu (fourth $1)))))
                (no (remove-if
-                     (f_ (has (nth at _) lo hi))
+                     (fn (has (nth at $1) lo hi))
                      (rows i))))
           (when no
             (list (list bit
@@ -187,7 +187,7 @@
      (length lst)))
 
 (defun tune (cands lst y)
-  (least cands (f_ (err _ lst y))))
+  (least cands (fn (err $1 lst y))))
 
 (defun rule (i tr)
   (let ((s (nth (? tr at) (names i)))
@@ -208,13 +208,13 @@
 ;;; 6. demos ---------------------------------------------------
 (defun eg-main ()
   (let+ ((i (data (csv (my file))))
-         (y (f_ (disty i _)))
+         (y (fn (disty i $1)))
          (ts (mapcar #'second (grows i y i))))
     (show i (tune ts (rows i) y))))
 
 (defun eg-trees ()
   (let+ ((i (data (csv (my file))))
-         (y (f_ (disty i _))))
+         (y (fn (disty i $1))))
     (loop for (bias tr) in (grows i y i)
           for k from 1 do
       (prn "===== tree ~2d   bias ~5a   err ~,3f ====="
@@ -226,7 +226,7 @@
         (t0 (get-internal-real-time)))
     (loop repeat reps do
       (let ((i (data (cons (car all) (few (cdr all) k)))))
-        (setf m (length (grows i (f_ (disty i _)) i)))))
+        (setf m (length (grows i (fn (disty i $1)) i)))))
     (let ((s (/ (- (get-internal-real-time) t0)
                 internal-time-units-per-second)))
       (prn "~dx (sample ~d, ~d trees): ~,3f s -> ~,1f ms"

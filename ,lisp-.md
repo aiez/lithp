@@ -6,8 +6,8 @@
 <a href="http://tiny.cc/lisp-"><img align="right" src="https://tiny.cc/tiny/qr-image/tiny.cc~lisp-~l~150.png" alt="QR"></a>
 
 `lib-` is **less library**: the smallest set of Common Lisp
-add-ons that measurably shrinks application code — six plain
-constructs plus a handful of utilities, 130 lines total, no
+add-ons that measurably shrinks application code — five plain
+constructs plus a handful of utilities, ~130 lines total, no
 reader macros, no dependencies. Found by ablation: we wrote
 the same machine-learner four ways and kept only what paid
 rent. **The why, the data, and the style rules are in
@@ -21,6 +21,10 @@ sbcl --script fft-nice.lisp --trees  # show all grown trees
 sbcl --script fft-nice.lisp --grows  # timing benchmark
 ```
 
+**Sections:** [NAME](#name) | [SYNOPSIS](#synopsis) | [KIT](#the-kit-five-constructs) | [UTILITIES](#utilities) | [FILES](#files) | [LICENSE](#license)
+
+**Files:** [lib-.lisp](#file-lib--lisp) | [blog.md](#file-blog-md) | [fft-nice.lisp](#file-fft-nice-lisp) | [fft-small.lisp](#file-fft-small-lisp) | [fft-2small.lisp](#file-fft-2small-lisp) | [fft-yuck.lisp](#file-fft-yuck-lisp) | [tiny.lisp](#file-tiny-lisp) | [tiny.vim](#file-tiny-vim) | [Makefile](#file-makefile)
+
 ## NAME
 
     lib- — less library: the pay-rent subset (130 lines, no deps)
@@ -33,12 +37,11 @@ sbcl --script fft-nice.lisp --grows  # timing benchmark
     (cli *settings*)                ; -s 42 on argv updates seed
     (setf *seed* (my seed))
 
-## THE KIT (six constructs)
+## THE KIT (five constructs)
 
 | form | meaning |
 |------|---------|
-| `(f_ expr)`  | `(lambda (_) expr)` — one-arg lambda, arg is `_` |
-| `(ff_ expr)` | `(lambda (_ __) expr)` — two-arg lambda |
+| `(fn expr)`  | variadic lambda; refer to args as `$1`..`$9` as used |
 | `(? x a b)`  | quoted-key chained access: `(ats (ats x 'a) 'b)` |
 | `(let+ (...) ...)` | one binder: `(x 1)` let, `((a b) lst)` destructure, `(f (z) ...)` local fn |
 | `(o 'k1 v1 'k2 v2)` | build equal-hash record |

@@ -1,7 +1,7 @@
 ; vim: set ft=lisp ts=2 sw=2 et :
 ; lib-.lisp -- the pay-rent subset of tiny.lisp.
 ; Kit (no reader macros):
-;   (f_ ...) (ff_ ...)   lambda of _, of _ __
+;   (fn ...)             lambda; args are $1..$9 as used
 ;   (? x a b)            quoted-key chained access
 ;   (let+ ((x 1)                    var
 ;          ((a b) lst)              destructure
@@ -21,11 +21,15 @@
 (defvar *seed* 1234567891)
 
 ;;; ----- the kit ----------------------------------------------
-(defmacro f_ (&body b)
-  `(lambda (_) (declare (ignorable _)) ,@b))
-
-(defmacro ff_ (&body b)
-  `(lambda (_ __) (declare (ignorable _ __)) ,@b))
+(defmacro fn (&body b)
+  (let ((a (gensym)))
+    `(lambda (&rest ,a)
+       (declare (ignorable ,a))
+       (symbol-macrolet
+           (($1 (nth 0 ,a)) ($2 (nth 1 ,a)) ($3 (nth 2 ,a))
+            ($4 (nth 3 ,a)) ($5 (nth 4 ,a)) ($6 (nth 5 ,a))
+            ($7 (nth 6 ,a)) ($8 (nth 7 ,a)) ($9 (nth 8 ,a)))
+         ,@b))))
 
 (defmacro ? (x k &rest ks)
   (if ks `(? (ats ,x ',k) ,@ks) `(ats ,x ',k)))
@@ -64,13 +68,13 @@
 (defun prn (f &rest a) (format t "~?~%" f a))
 
 (defun least (l f)
-  (reduce (ff_ (if (<= (funcall f _) (funcall f __))
-                   _ __))
+  (reduce (fn (if (<= (funcall f $1) (funcall f $2))
+                  $1 $2))
           l))
 
 (defun most (l f)
-  (reduce (ff_ (if (>= (funcall f _) (funcall f __))
-                   _ __))
+  (reduce (fn (if (>= (funcall f $1) (funcall f $2))
+                  $1 $2))
           l))
 
 ;;; ----- strings to things ------------------------------------
