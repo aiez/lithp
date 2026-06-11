@@ -58,31 +58,29 @@
   names x y (goal (o)) (cols (o)) all rows)
 
 (defun data (src &aux (i (%data :names (pop src) :rows src)))
-  (loop for s in (names i) for at from 0 do (role i s at))                
-  (adds i src))
+  (loop for s in (names i) for at from 0 do (role i s at))
+  (dolist (row (rows i) i)               ; rows: add by position
+    (mapc #'add (all i) row)))
 
 (defun role (i s at)
   (let ((z (char s (1- (length s)))))
     (setf (ats (cols i) at)
           (if (lower-case-p (char s 0)) (sym) (num)))
-    (end! (all i) (col i at))              
+    (end! (all i) (col i at))
     (cond ((find z "-+!")
            (setf (ats (goal i) at) (if (eql z #\+) 1 0))
            (end! (y i) at))
           ((not (eql z #\X)) (end! (x i) at)))))
 
-(defun adds (lst &optional (it (num)))
-  (dolist (v lst it) (add it v)))
-
-(defun add ((i data) row w)
-  (mapc (fn (add $1 $2 w)) (cols i) row))))
-
 (defun add (i v &optional (w 1))
   (if (eq v '?) i (add+ i v w)))
 
 (defmethod add+ ((i hash-table) v w)
-  (incf (ats i v 0) w) it)
+  (incf (ats i v 0) w) i)
 (defmethod add+ ((i num) v w) (welford i v w))
+
+(defun adds (lst &optional (it (num)))
+  (dolist (v lst it) (setf it (add it v))))
 
 ;;; 3. discretization ------------------------------------------
 (defun col (i at) (ats (cols i) at))
@@ -122,14 +120,15 @@
             (butlast (sort (keys bins) #'<)))))
 
 ;;; 4. grow trees ----------------------------------------------
+(defun mink (lst &optional (p (my p)))
+  (let ((n (length lst)))
+    (expt (/ (loop for x in lst sum (expt (abs x) p)) n)
+          (/ 1.0 p))))
+
 (defun disty (i row)
-  (expt (/ (loop for at in (y i) sum
-                 (expt (abs (- (norm (col i at)
-                                     (nth at row))
-                               (ats (goal i) at)))
-                       (my p)))
-           (length (y i)))
-        (/ 1.0 (my p))))
+  (mink (mapcar (fn (- (norm (col i $1) (nth $1 row))
+                       (ats (goal i) $1)))
+                (y i))))
 
 (defmethod has ((v symbol) lo hi) t)
 (defmethod has ((v string) lo hi) (equal v lo))
@@ -137,21 +136,18 @@
 
 (defun splits (i y root)
   (let+ ((enough (expt (length (rows root)) .33))
-         (cs (remove-if
-               (fn (<= (n (fourth $1)) enough))
-               (cuts i (rows i) y))))
+         (cs (remove-if (fn (<= (n (fourth $1)) enough))
+                        (cuts i (rows i) y))))
     (when cs
       (loop for (bit pick) in `((0 ,#'least) (1 ,#'most))
             append
         (let+ (((at lo hi leaf)
                 (funcall pick cs (fn (mu (fourth $1)))))
-               (no (remove-if
-                     (fn (has (nth at $1) lo hi))
-                     (rows i))))
+               (no (remove-if (fn (has (nth at $1) lo hi))
+                              (rows i))))
           (when no
-            (list (list bit
-                        (o 'at at 'lo lo 'hi hi
-                           'left leaf)
+            (list (list bit (o 'at at 'lo lo 'hi hi
+                               'left leaf) 
                         no))))))))
 
 (defun grows (i y root &optional (d 0))
