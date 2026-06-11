@@ -145,10 +145,9 @@
                 (funcall pick cs (fn (mu (fourth $1)))))
                (no (remove-if (fn (has (nth at $1) lo hi))
                               (rows i))))
-          (when no
-            (list (list bit (o 'at at 'lo lo 'hi hi
+          (when no (list (list bit (o 'at at 'lo lo 'hi hi
                                'left leaf) 
-                        no))))))))
+                               no))))))))
 
 (defun grows (i y root &optional (d 0))
   (or (when (< d (my depth))
@@ -174,8 +173,7 @@
            row))
 
 (defun err (tr lst y)
-  (/ (loop for r in lst sum
-           (abs (- (funcall y r) (predict tr r))))
+  (/ (loop for r in lst sum (abs (- (funcall y r) (predict tr r))))
      (length lst)))
 
 (defun tune (cands lst y)

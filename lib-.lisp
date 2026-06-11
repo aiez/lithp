@@ -37,12 +37,9 @@
 (defmacro let+ ((b &rest bs) &body body)
   (let ((tail (if bs `((let+ ,bs ,@body)) body)))
     (cond ((consp (first b))
-           `(destructuring-bind ,(first b) ,(second b)
-              ,@tail))
-          ((cddr b)
-           `(labels ((,(first b) ,@(rest b))) ,@tail))
-          (t
-           `(let ((,(first b) ,(second b))) ,@tail)))))
+           `(destructuring-bind ,(first b) ,(second b) ,@tail))
+          ((cddr b) `(labels ((,(first b) ,@(rest b))) ,@tail))
+          (t        `(let ((,(first b) ,(second b))) ,@tail)))))
 
 (defun o (&rest kvs)
   (let ((h (make-hash-table :test #'equal)))
@@ -71,13 +68,11 @@
 (defun prn (f &rest a) (format t "~?~%" f a))
 
 (defun least (l f)
-  (reduce (fn (if (<= (funcall f $1) (funcall f $2))
-                  $1 $2))
+  (reduce (fn (if (<= (funcall f $1) (funcall f $2)) $1 $2))
           l))
 
 (defun most (l f)
-  (reduce (fn (if (>= (funcall f $1) (funcall f $2))
-                  $1 $2))
+  (reduce (fn (if (>= (funcall f $1) (funcall f $2)) $1 $2))
           l))
 
 ;;; ----- strings to things ------------------------------------
@@ -101,12 +96,9 @@
 
 (defun csv (file)
   (with-open-file (in file)
-    (loop for ln = (read-line in nil)
-          while ln
-          for l = (string-trim '(#\space #\tab #\return)
-                               ln)
-          unless (or (equal l "")
-                     (eql (char l 0) #\#))
+    (loop for ln = (read-line in nil) while ln
+          for l = (string-trim '(#\space #\tab #\return) ln)
+          unless (or (equal l "") (eql (char l 0) #\#))
           collect (mapcar #'thing (cells l)))))
 
 ;;; ----- cli ---------------------------------------------------

@@ -22,10 +22,32 @@ run: ## run the sweet-spot version
 	$(call need,sbcl,run)
 	@sbcl --script fft.lisp
 
-check: ## all four versions must print byte-identical output
-	$(call need,sbcl,check)
-	@sbcl --script to_small.lisp > /tmp/2small.out
-	@for f in small fft yuck; do \
-	   sbcl --script $$f.lisp > /tmp/$$f.out; \
-	   diff -q /tmp/2small.out /tmp/$$f.out >/dev/null \
-	     && echo "$$f SAME" || echo "$$f DIFF"; done
+# ---- tests: one UPPERCASE rule per mode; `test` discovers all -----
+# strip wall-clock noise (e.g. "0.042 s -> 4.2 ms") so benchmark
+# variants compare on deterministic content (tree count, etc.)
+_scrub = sed -E 's/[0-9]+\.[0-9]+ s -> [0-9]+\.[0-9]+ ms//'
+
+define _diff
+sbcl --script to_small.lisp $(1) | $(_scrub) > /tmp/2small.out; \
+for f in small fft yuck; do \
+  sbcl --script $$f.lisp $(1) | $(_scrub) > /tmp/$$f.out; \
+  diff -q /tmp/2small.out /tmp/$$f.out >/dev/null \
+    && echo "  $$f SAME" || echo "  $$f DIFF"; done
+endef
+
+MAIN:  ## test: default mode, all variants byte-identical
+	$(call need,sbcl,MAIN)
+	@$(call _diff,)
+
+GROWS: ## test: --grows mode, all variants byte-identical
+	$(call need,sbcl,GROWS)
+	@$(call _diff,--grows)
+
+TREES: ## test: --trees mode, all variants byte-identical
+	$(call need,sbcl,TREES)
+	@$(call _diff,--trees)
+
+test: ## run every UPPERCASE rule (= one test per mode)
+	@gawk -F: '/^[A-Z][A-Z_]*:[^=]/ {print $$1}' $(MAKEFILE_LIST) | \
+	  sort -u | while read t; do \
+	    printf "\n=== %s ===\n" "$$t"; $(MAKE) -s $$t; done
