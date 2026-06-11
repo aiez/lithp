@@ -24,11 +24,11 @@ the random demos match):
 
 | file            | LOC | lib LOC | chars | dialect |
 |-----------------|-----|---------|-------|---------|
-| fft-yuck.lisp   | 605 | 0       | 21646 | naive CLOS port, no style guide |
+| yuck.lisp       | 605 | 0       | 21646 | naive CLOS port, no style guide |
 | fft.py          | 235 | 0       | 6876  | python  |
-| fft-small.lisp  | 261 | 134     | 8500  | plain ANSI CL (lib- utils only, no kit) |
-| fft-nice.lisp   | 240 | 134     | 7610  | + 5 plain constructs (lib-.lisp) |
-| fft-2small.lisp | 214 | 165     | 6877  | + reader macros (tiny.lisp) |
+| small.lisp      | 261 | 134     | 8500  | plain ANSI CL (lib- utils only, no kit) |
+| fft.lisp        | 240 | 134     | 7610  | + 5 plain constructs (lib-.lisp) |
+| to_small.lisp   | 214 | 165     | 6877  | + reader macros (tiny.lisp) |
 
 (*lib LOC* = required support library: lib-.lisp for
 small and nice; tiny.lisp for 2small. Yuck and the Python
@@ -43,9 +43,9 @@ runtime** — macros expand away.
 First, honesty about the bottom line: only the full
 reader-macro dialect beats Python (214 vs 235), and that
 is the version we end up not recommending. The sweet
-spot, fft-nice, is five lines *longer* than the Python (plus some support code, which is a fair comparison since our Python system made extensive use of Python's stdlib).
+spot, fft, is five lines *longer* than the Python (plus some support code, which is a fair comparison since our Python system made extensive use of Python's stdlib).
 The interesting number is not down there — it is the top
-row. `fft-yuck.lisp` is the port an LLM (or a
+row. `yuck.lisp` is the port an LLM (or a
 diligent newcomer) writes with no style guide: full CLOS
 ceremony, `:documentation` on every slot, `with-slots`,
 descriptive-novel names, plist tree nodes read with
@@ -222,7 +222,7 @@ love, not leverage.
    app *today*. Measure with `wc` after every change.
 5. When tempted by a macro, try a design fix first:
    dispatch, slot default, mutate-in-place, data table.
-6. Keep an ablation file (`fft-small.lisp`) so every
+6. Keep an ablation file (`small.lisp`) so every
    macro must keep justifying its existence.
 
 ## One sample, three ways

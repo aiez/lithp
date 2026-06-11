@@ -1,8 +1,8 @@
 ; vim: set ft=lisp ts=2 sw=2 et :
-; fft-nice.lisp -- fft-small.lisp rebuilt on lib-.lisp:
-; plain ANSI CL plus only fn ? let+ o ats, and a
-; local (my k) settings macro. No reader macros, no
-; def/def+/!/{} sugar.
+; small.lisp -- ablation baseline for to_small.lisp.
+; Same algorithm, same function structure, but plain ANSI
+; Common Lisp: lib-.lisp used for general utils only
+; (csv, prn, rand...); none of its kit macros appear here.
 ; (c) 2026 Tim Menzies timm@ieee.org, MIT license.
 
 (load "lib-.lisp")
@@ -11,7 +11,7 @@
   '((seed . 1234567891) (p . 2) (bins . 7) (depth . 4)
     (file . "../optimiz/auto93.csv")))
 
-(defmacro my (k) `(cdr (assoc ',k *settings*)))
+(defun setting (k) (cdr (assoc k *settings*)))
 
 (defvar big 1e32)
 
@@ -20,7 +20,7 @@
               (&optional (n 0) (mu 0.0) (m2 0.0))))
   n mu m2)
 
-(defun sym () (o))
+(defun sym () (make-hash-table :test #'equal))
 
 (defun sd (i)
   (if (< (n i) 2) 0
@@ -38,9 +38,13 @@
     (/ 1 (+ 1 (exp (* -1.7 (max -3 (min 3 z))))))))
 
 (defmethod mix ((i hash-table) j &optional (w 1))
-  (let ((out (o)))
-    (maphash (fn (incf (ats out $1 0) $2)) i)
-    (maphash (fn (incf (ats out $1 0) (* w $2))) j)
+  (let ((out (make-hash-table :test #'equal)))
+    (maphash (lambda (k v)
+               (incf (gethash k out 0) v))
+             i)
+    (maphash (lambda (k v)
+               (incf (gethash k out 0) (* w v)))
+             j)
     out))
 
 (defmethod mix ((i num) j &optional (w 1))
@@ -55,39 +59,48 @@
 
 ;;; 2. data ----------------------------------------------------
 (defstruct (data (:conc-name) (:constructor %data))
-  names x y (goal (o)) (cols (o)) all rows)
+  names x y
+  (goal (make-hash-table :test #'equal))
+  (cols (make-hash-table :test #'equal))
+  rows)
 
-(defun data (src &aux (i (%data :names (pop src) :rows src)))
-  (loop for s in (names i) for at from 0 do (role i s at))
-  (dolist (row (rows i) i)               ; rows: add by position
-    (mapc #'add (all i) row)))
+(defun data (src)
+  (let ((i (%data :names (car src) :rows (cdr src))))
+    (loop for s in (names i) for at from 0
+          for r = (roles i s at)
+          when (eq r 'x) collect at into xs
+          when (eq r 'y) collect at into ys
+          finally (setf (x i) xs (y i) ys))
+    (dolist (row (rows i) i)
+      (loop for v in row for at from 0
+            do (add (gethash at (cols i)) v)))))
 
-(defun role (i s at)
+(defun roles (i s at)
   (let ((z (char s (1- (length s)))))
-    (setf (ats (cols i) at)
+    (setf (gethash at (cols i))
           (if (lower-case-p (char s 0)) (sym) (num)))
-    (end! (all i) (col i at))
     (cond ((find z "-+!")
-           (setf (ats (goal i) at) (if (eql z #\+) 1 0))
-           (end! (y i) at))
-          ((not (eql z #\X)) (end! (x i) at)))))
+           (setf (gethash at (goal i))
+                 (if (eql z #\+) 1 0))
+           'y)
+          ((not (eql z #\X)) 'x))))
 
-(defun add (i v &optional (w 1))
-  (if (eq v '?) i (add+ i v w)))
+(defun add (it v &optional (w 1))
+  (if (eq v '?) it (add+ it v w)))
 
-(defmethod add+ ((i hash-table) v w)
-  (incf (ats i v 0) w) i)
-(defmethod add+ ((i num) v w) (welford i v w))
+(defmethod add+ ((it hash-table) v w)
+  (incf (gethash v it 0) w) it)
+(defmethod add+ ((it num) v w) (welford it v w))
 
 (defun adds (lst &optional (it (num)))
   (dolist (v lst it) (setf it (add it v))))
 
 ;;; 3. discretization ------------------------------------------
-(defun col (i at) (ats (cols i) at))
+(defun col (i at) (gethash at (cols i)))
 
 (defmethod bin ((c hash-table) v) v)
 (defmethod bin ((c num) v)
-  (floor (* (my bins) (norm c v))))
+  (floor (* (setting 'bins) (norm c v))))
 
 (defmethod top ((c hash-table) v old) v)
 (defmethod top ((c num) v old)
@@ -99,59 +112,73 @@
           append (cuts-at (col i at) lst ys at))))
 
 (defun cuts-at (c lst ys at)
-  (let ((bins (o)) (hi (o)))
+  (let ((bins (make-hash-table :test #'equal))
+        (hi   (make-hash-table :test #'equal)))
     (loop for r in lst for y1 in ys
           for v = (nth at r) unless (eq v '?) do
       (let ((k (bin c v)))
-        (setf (ats bins k)
-              (add (or (ats bins k) (num)) y1)
-              (ats hi k) (top c v (ats hi k)))))
+        (setf (gethash k bins)
+              (add (or (gethash k bins) (num)) y1)
+              (gethash k hi)
+              (top c v (gethash k hi)))))
     (cuts-of c bins hi at)))
 
 (defmethod cuts-of ((c hash-table) bins hi at)
-  (mapcar (fn (list at (ats hi $1) (ats hi $1)
-                    (ats bins $1)))
+  (mapcar (lambda (k)
+            (list at (gethash k hi) (gethash k hi)
+                  (gethash k bins)))
           (keys bins)))
 
 (defmethod cuts-of ((c num) bins hi at)
   (let ((l (num)))
-    (mapcar (fn (setf l (mix l (ats bins $1)))
-                (list at (- big) (ats hi $1) l))
+    (mapcar (lambda (k)
+              (setf l (mix l (gethash k bins)))
+              (list at (- big) (gethash k hi) l))
             (butlast (sort (keys bins) #'<)))))
 
 ;;; 4. grow trees ----------------------------------------------
-(defun mink (lst &optional (p (my p)))
-  (let ((n (length lst)))
-    (expt (/ (loop for x in lst sum (expt (abs x) p)) n)
-          (/ 1.0 p))))
-
 (defun disty (i row)
-  (mink (mapcar (fn (- (norm (col i $1) (nth $1 row))
-                       (ats (goal i) $1)))
-                (y i))))
+  (expt (/ (loop for at in (y i) sum
+                 (expt (abs (- (norm (col i at)
+                                     (nth at row))
+                               (gethash at (goal i))))
+                       (setting 'p)))
+           (length (y i)))
+        (/ 1.0 (setting 'p))))
 
 (defmethod has ((v symbol) lo hi) t)
 (defmethod has ((v string) lo hi) (equal v lo))
 (defmethod has ((v number) lo hi) (<= lo v hi))
 
+(defun node (at lo hi left right)
+  (let ((h (make-hash-table :test #'equal)))
+    (setf (gethash 'at h) at (gethash 'lo h) lo
+          (gethash 'hi h) hi (gethash 'left h) left
+          (gethash 'right h) right)
+    h))
+
 (defun splits (i y root)
-  (let+ ((enough (expt (length (rows root)) .33))
-         (cs (remove-if (fn (<= (n (fourth $1)) enough))
-                        (cuts i (rows i) y))))
+  (let* ((enough (expt (length (rows root)) .33))
+         (cs (remove-if
+               (lambda (c) (<= (n (fourth c)) enough))
+               (cuts i (rows i) y))))
     (when cs
       (loop for (bit pick) in `((0 ,#'least) (1 ,#'most))
             append
-        (let+ (((at lo hi leaf)
-                (funcall pick cs (fn (mu (fourth $1)))))
-               (no (remove-if (fn (has (nth at $1) lo hi))
-                              (rows i))))
-          (when no
-            (list (list bit (o 'at at 'lo lo 'hi hi
-                               'left leaf) 
-                        no))))))))
+        (destructuring-bind (at lo hi leaf)
+            (funcall pick cs
+                     (lambda (c) (mu (fourth c))))
+          (let ((no (remove-if
+                      (lambda (r)
+                        (has (nth at r) lo hi))
+                      (rows i))))
+            (when no
+              (list (list bit
+                          (node at lo hi leaf nil)
+                          no)))))))))
 
 (defun grows (i y root &optional (d 0))
-  (or (when (< d (my depth))
+  (or (when (< d (setting 'depth))
         (loop for (bit nd no) in (splits i y root)
               for kid = (data (cons (names i) no))
               append
@@ -161,16 +188,16 @@
       (list (list "" (adds (mapcar y (rows i)))))))
 
 (defun branch (nd right)
-  (o 'at (? nd at) 'lo (? nd lo) 'hi (? nd hi)
-     'left (? nd left) 'right right))
+  (node (gethash 'at nd) (gethash 'lo nd)
+        (gethash 'hi nd) (gethash 'left nd) right))
 
 ;;; 5. use trees -----------------------------------------------
 (defmethod predict ((i num) row) (mu i))
 (defmethod predict ((i hash-table) row)
-  (predict (if (has (nth (? i at) row)
-                    (? i lo) (? i hi))
-               (? i left)
-               (? i right))
+  (predict (if (has (nth (gethash 'at i) row)
+                    (gethash 'lo i) (gethash 'hi i))
+               (gethash 'left i)
+               (gethash 'right i))
            row))
 
 (defun err (tr lst y)
@@ -179,11 +206,11 @@
      (length lst)))
 
 (defun tune (cands lst y)
-  (least cands (fn (err $1 lst y))))
+  (least cands (lambda (tr) (err tr lst y))))
 
 (defun rule (i tr)
-  (let ((s (nth (? tr at) (names i)))
-        (lo (? tr lo)) (hi (? tr hi)))
+  (let ((s (nth (gethash 'at tr) (names i)))
+        (lo (gethash 'lo tr)) (hi (gethash 'hi tr)))
     (cond ((equal lo hi)  (cat s " == " lo))
           ((= lo (- big)) (cat s " <= " hi))
           (t              (cat s " >= " lo)))))
@@ -192,21 +219,21 @@
   (prn "~33a leaf  d2h ~,2f n=~d" "" (mu tr) (n tr)))
 
 (defmethod show (i (tr hash-table))
-  (let ((l (? tr left)))
+  (let ((l (gethash 'left tr)))
     (prn "if ~30a then d2h ~,2f n=~d"
          (rule i tr) (mu l) (n l))
-    (show i (? tr right))))
+    (show i (gethash 'right tr))))
 
 ;;; 6. demos ---------------------------------------------------
 (defun eg-main ()
-  (let+ ((i (data (csv (my file))))
-         (y (fn (disty i $1)))
+  (let* ((i (data (csv (setting 'file))))
+         (y (lambda (r) (disty i r)))
          (ts (mapcar #'second (grows i y i))))
     (show i (tune ts (rows i) y))))
 
 (defun eg-trees ()
-  (let+ ((i (data (csv (my file))))
-         (y (fn (disty i $1))))
+  (let* ((i (data (csv (setting 'file))))
+         (y (lambda (r) (disty i r))))
     (loop for (bias tr) in (grows i y i)
           for k from 1 do
       (prn "===== tree ~2d   bias ~5a   err ~,3f ====="
@@ -214,11 +241,13 @@
       (show i tr) (terpri))))
 
 (defun eg-grows (&optional (reps 10) (k 100))
-  (let ((all (csv (my file))) (m 0)
+  (let ((all (csv (setting 'file))) (m 0)
         (t0 (get-internal-real-time)))
     (loop repeat reps do
       (let ((i (data (cons (car all) (few (cdr all) k)))))
-        (setf m (length (grows i (fn (disty i $1)) i)))))
+        (setf m (length
+                  (grows i (lambda (r) (disty i r))
+                         i)))))
     (let ((s (/ (- (get-internal-real-time) t0)
                 internal-time-units-per-second)))
       (prn "~dx (sample ~d, ~d trees): ~,3f s -> ~,1f ms"
@@ -226,7 +255,7 @@
 
 ;;; 7. start ---------------------------------------------------
 (cli *settings*)
-(setf *seed* (my seed))
+(setf *seed* (setting 'seed))
 (cond ((member "--grows" (args) :test #'equal) (eg-grows))
       ((member "--trees" (args) :test #'equal) (eg-trees))
       (t (eg-main)))

@@ -1,5 +1,5 @@
 ; vim: set ft=lisp ts=2 sw=2 et :
-; fft-2small.lisp -- fast-frugal multi-objective tree.
+; to_small.lisp -- fast-frugal multi-objective tree.
 ; (c) 2026 Tim Menzies timm@ieee.org, MIT license.
 ; Port of ../semble/fft.py, built on tiny.lisp.
 

@@ -1,8 +1,8 @@
-;;;; fft-yuck.lisp -- a deliberately naive first-pass port of
+;;;; yuck.lisp -- a deliberately naive first-pass port of
 ;;;; fft.py to Common Lisp: the code an LLM (or a newcomer)
 ;;;; writes before any style guide. CLOS ceremony, long names,
 ;;;; plist tree nodes, push/nreverse everywhere, getf config.
-;;;; Same algorithm and seed as fft-2small.lisp: same output.
+;;;; Same algorithm and seed as to_small.lisp: same output.
 ;;;; Kept as the "before" exhibit for blog.md.
 
 #+sbcl (declaim (sb-ext:muffle-conditions

@@ -16,14 +16,14 @@ rent. **The why, the data, and the style rules are in
 ```bash
 git clone http://tiny.cc/optimiz # access test data
 git clone http://tiny.cc/lisp- && cd lisp-
-sbcl --script fft-nice.lisp          # the sweet-spot version
-sbcl --script fft-nice.lisp --trees  # show all grown trees
-sbcl --script fft-nice.lisp --grows  # timing benchmark
+sbcl --script fft.lisp          # the sweet-spot version
+sbcl --script fft.lisp --trees  # show all grown trees
+sbcl --script fft.lisp --grows  # timing benchmark
 ```
 
 **Sections:** [NAME](#name) | [SYNOPSIS](#synopsis) | [KIT](#the-kit-five-constructs) | [UTILITIES](#utilities) | [FILES](#files) | [LICENSE](#license)
 
-**Files:** [lib-.lisp](#file-lib-lisp) | [blog.md](#file-blog-md) | [fft-nice.lisp](#file-fft-nice-lisp) | [fft-small.lisp](#file-fft-small-lisp) | [fft-2small.lisp](#file-fft-2small-lisp) | [fft-yuck.lisp](#file-fft-yuck-lisp) | [tiny.lisp](#file-tiny-lisp) | [tiny.vim](#file-tiny-vim) | [Makefile](#file-makefile)
+**Files:** [lib-.lisp](#file-lib-lisp) | [blog.md](#file-blog-md) | [fft.lisp](#file-fft-lisp) | [small.lisp](#file-small-lisp) | [to_small.lisp](#file-to_small-lisp) | [yuck.lisp](#file-yuck-lisp) | [tiny.lisp](#file-tiny-lisp) | [tiny.vim](#file-tiny-vim) | [Makefile](#file-makefile)
 
 ## NAME
 
@@ -65,13 +65,13 @@ Plus `(keys h)` — list of hash keys.
 |------|------|
 | `lib-.lisp`      | this library |
 | `blog.md`        | the ablation study: why these and only these |
-| `fft-yuck.lisp`  | naive CLOS port, 605 lines — the cautionary tale |
-| `fft-small.lisp` | plain ANSI CL, design only, 261 lines |
-| `fft-nice.lisp`  | + the kit, 240 lines — **the sweet spot** |
-| `fft-2small.lisp`| + reader macros via `tiny.lisp`, 214 lines — fun, not leverage |
+| `yuck.lisp`     | naive CLOS port, 605 lines — the cautionary tale |
+| `small.lisp`    | plain ANSI CL, design only, 261 lines |
+| `fft.lisp`      | + the kit, 240 lines — **the sweet spot** |
+| `to_small.lisp` | + reader macros via `tiny.lisp`, 214 lines — fun, not leverage |
 | `tiny.lisp` / `tiny.vim` | the full dialect and its required editor support |
 
-All four `fft-*` programs produce byte-identical output
+All four programs (`fft`, `small`, `to_small`, `yuck`) produce byte-identical output
 (same seeded RNG as the Python original they port).
 
 ## LICENSE
