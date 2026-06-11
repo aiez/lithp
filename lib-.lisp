@@ -62,6 +62,9 @@
 (defun keys (h)
   (loop for k being the hash-keys of h collect k))
 
+(defmacro end! (place x)        ; append x to tail of list in place
+  `(setf ,place (nconc ,place (list ,x))))
+
 ;;; ----- little things ----------------------------------------
 (defun cat (&rest l) (format nil "~{~a~}" l))
 

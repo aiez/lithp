@@ -55,38 +55,34 @@
 
 ;;; 2. data ----------------------------------------------------
 (defstruct (data (:conc-name) (:constructor %data))
-  names x y (goal (o)) (cols (o)) rows)
+  names x y (goal (o)) (cols (o)) all rows)
 
-(defun data (src)
-  (let ((i (%data :names (car src) :rows (cdr src))))
-    (loop for s in (names i) for at from 0
-          for r = (roles i s at)
-          when (eq r 'x) collect at into xs
-          when (eq r 'y) collect at into ys
-          finally (setf (x i) xs (y i) ys))
-    (dolist (row (rows i) i)
-      (loop for v in row for at from 0
-            do (add (ats (cols i) at) v)))))
+(defun data (src &aux (i (%data :names (pop src) :rows src)))
+  (loop for s in (names i) for at from 0 do (role i s at))                
+  (adds i src))
 
-(defun roles (i s at)
+(defun role (i s at)
   (let ((z (char s (1- (length s)))))
     (setf (ats (cols i) at)
           (if (lower-case-p (char s 0)) (sym) (num)))
+    (end! (all i) (col i at))              
     (cond ((find z "-+!")
-           (setf (ats (goal i) at)
-                 (if (eql z #\+) 1 0))
-           'y)
-          ((not (eql z #\X)) 'x))))
-
-(defun add (it v &optional (w 1))
-  (if (eq v '?) it (add+ it v w)))
-
-(defmethod add+ ((it hash-table) v w)
-  (incf (ats it v 0) w) it)
-(defmethod add+ ((it num) v w) (welford it v w))
+           (setf (ats (goal i) at) (if (eql z #\+) 1 0))
+           (end! (y i) at))
+          ((not (eql z #\X)) (end! (x i) at)))))
 
 (defun adds (lst &optional (it (num)))
-  (dolist (v lst it) (setf it (add it v))))
+  (dolist (v lst it) (add it v)))
+
+(defun add ((i data) row w)
+  (mapc (fn (add $1 $2 w)) (cols i) row))))
+
+(defun add (i v &optional (w 1))
+  (if (eq v '?) i (add+ i v w)))
+
+(defmethod add+ ((i hash-table) v w)
+  (incf (ats i v 0) w) it)
+(defmethod add+ ((i num) v w) (welford i v w))
 
 ;;; 3. discretization ------------------------------------------
 (defun col (i at) (ats (cols i) at))
