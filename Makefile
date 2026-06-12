@@ -15,7 +15,7 @@ PKG   := sbcl gawk neovim tmux
 
 $(KONFIG)/Makefile:
 	@test -f $@ || { echo "missing konfig: git clone http://tiny.cc/konfig $(KONFIG)"; exit 1; }
--include $(KONFIG)/Makefile
+include $(KONFIG)/Makefile
 
 # ---- run: the ablation suite --------------------------------------
 run: ## run the sweet-spot version
