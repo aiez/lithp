@@ -2,7 +2,7 @@
 # knobs only; shared targets live in $(KONFIG)/Makefile
 KONFIG ?= ../konfig
 
-APP   := lisp-
+APP   := lithp
 MAIN  := fft.lisp
 EXT   := lisp
 LANG  := lisp

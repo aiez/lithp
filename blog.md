@@ -1,8 +1,8 @@
 # Writing Succinct Lisp: an Ablation Study
 
-<a href="http://tiny.cc/lisp-"><img align="right"
-src="https://tiny.cc/tiny/qr-image/tiny.cc~lisp-~l~150.png"
-alt="QR: tiny.cc/lisp-"></a>
+<a href="http://tiny.cc/lithp"><img align="right"
+src="https://tiny.cc/tiny/qr-image/tiny.cc~lithp~l~150.png"
+alt="QR: tiny.cc/lithp"></a>
 
  
 One sunny day, me and claude-fable-5 went for a walk.    

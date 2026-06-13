@@ -1,9 +1,9 @@
 <!-- Copyright (c) 2026 Tim Menzies, MIT License https://opensource.org/licenses/MIT -->
 <img src="https://img.shields.io/badge/Purpose-Succinct·Lisp-7b68ee?logo=githubcopilot&logoColor=white" alt="Purpose"> <a href="https://timm.fyi"> <img src="https://img.shields.io/badge/Author-timm-dc143c?logo=readme&logoColor=white" alt="Author"></a> <img src="https://img.shields.io/badge/Language-Common%20Lisp-000080?logo=commonlisp&logoColor=white" alt="Language"><a href="https://choosealicense.com/licenses/mit/"> <img src="https://img.shields.io/badge/License-MIT-32cd32?logo=open-source-initiative&logoColor=white" alt="License"></a>
 
-### [http://tiny.cc/lisp-](http://tiny.cc/lisp-)
+### [http://tiny.cc/lithp](http://tiny.cc/lithp)
 
-<a href="http://tiny.cc/lisp-"><img align="right" src="https://tiny.cc/tiny/qr-image/tiny.cc~lisp-~l~150.png" alt="QR"></a>
+<a href="http://tiny.cc/lithp"><img align="right" src="https://tiny.cc/tiny/qr-image/tiny.cc~lithp~l~150.png" alt="QR"></a>
 
 `lib-` is **less library**: the smallest set of Common Lisp
 add-ons that measurably shrinks application code — five plain
@@ -15,7 +15,7 @@ rent. **The why, the data, and the style rules are in
 
 ```bash
 git clone http://tiny.cc/optimiz # access test data
-git clone http://tiny.cc/lisp- && cd lisp-
+git clone http://tiny.cc/lithp && cd lithp
 sbcl --script fft.lisp          # the sweet-spot version
 sbcl --script fft.lisp --trees  # show all grown trees
 sbcl --script fft.lisp --grows  # timing benchmark
