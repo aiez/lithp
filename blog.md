@@ -26,11 +26,11 @@ the random demos match):
 |-----------------|-----|---------|-------|---------|
 | yuck.lisp       | 605 | 0       | 21646 | naive CLOS port, no style guide |
 | fft.py          | 235 | 0       | 6876  | python  |
-| small.lisp      | 261 | 134     | 8500  | plain ANSI CL (lib- utils only, no kit) |
-| fft.lisp        | 240 | 134     | 7610  | + 5 plain constructs (lib-.lisp) |
+| small.lisp      | 261 | 134     | 8500  | plain ANSI CL (lithp utils only, no kit) |
+| fft.lisp        | 240 | 134     | 7610  | + 5 plain constructs (lithp.lisp) |
 | to_small.lisp   | 214 | 165     | 6877  | + reader macros (tiny.lisp) |
 
-(*lib LOC* = required support library: lib-.lisp for
+(*lib LOC* = required support library: lithp.lisp for
 small and nice; tiny.lisp for 2small. Yuck and the Python
 are self-contained.)
 
@@ -170,7 +170,7 @@ chars). They fix Common Lisp's two genuine warts:
 - plus `let+` (let / destructure / local fn in one form)
   and a 1-line app macro `(my k)` for settings.
 
-This is `lib-.lisp` (full listing below).
+This is `lithp.lisp` (full listing below).
 
 ### 3. Reader macros (the last ~10%, the most magic)
 
@@ -281,10 +281,10 @@ So: a few macros are genuinely useful. More hit
 diminishing returns fast. You can get away with not
 much — and mostly, you should.
 
-## Appendix: lib-.lisp (the pay-rent subset, 134 lines)
+## Appendix: lithp.lisp (the pay-rent subset, 134 lines)
 
 ```lisp
-; lib-.lisp -- the pay-rent subset of tiny.lisp.
+; lithp.lisp -- the pay-rent subset of tiny.lisp.
 ; Kit (no reader macros):
 ;   (fn ...)             lambda; args are $1..$9 as used
 ;   (? x a b)            quoted-key chained access

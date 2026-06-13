@@ -1,11 +1,11 @@
 ; vim: set ft=lisp ts=2 sw=2 et :
-; fft.lisp -- small.lisp rebuilt on lib-.lisp:
+; fft.lisp -- small.lisp rebuilt on lithp.lisp:
 ; plain ANSI CL plus only fn ? let+ o ats, and a
 ; local (my k) settings macro. No reader macros, no
 ; def/def+/!/{} sugar.
 ; (c) 2026 Tim Menzies timm@ieee.org, MIT license.
 
-(load "lib-.lisp")
+(load "lithp.lisp")
 
 (defvar *settings*
   '((seed . 1234567891) (p . 2) (bins . 7) (depth . 4)

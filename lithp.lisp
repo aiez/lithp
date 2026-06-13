@@ -1,5 +1,5 @@
 ; vim: set ft=lisp ts=2 sw=2 et :
-; lib-.lisp -- the pay-rent subset of tiny.lisp.
+; lithp.lisp -- the pay-rent subset of tiny.lisp.
 ; Kit (no reader macros):
 ;   (fn ...)             lambda; args are $1..$9 as used
 ;   (? x a b)            quoted-key chained access

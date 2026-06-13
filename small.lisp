@@ -1,11 +1,11 @@
 ; vim: set ft=lisp ts=2 sw=2 et :
 ; small.lisp -- ablation baseline for to_small.lisp.
 ; Same algorithm, same function structure, but plain ANSI
-; Common Lisp: lib-.lisp used for general utils only
+; Common Lisp: lithp.lisp used for general utils only
 ; (csv, prn, rand...); none of its kit macros appear here.
 ; (c) 2026 Tim Menzies timm@ieee.org, MIT license.
 
-(load "lib-.lisp")
+(load "lithp.lisp")
 
 (defvar *settings*
   '((seed . 1234567891) (p . 2) (bins . 7) (depth . 4)

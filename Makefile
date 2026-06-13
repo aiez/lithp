@@ -8,7 +8,7 @@ EXT   := lisp
 LANG  := lisp
 LINT  := sbcl --noinform --disable-debugger \
            --eval '(handler-bind ((warning (function muffle-warning))) \
-                     (compile-file "lib-.lisp"))' \
+                     (compile-file "lithp.lisp"))' \
            --quit
 TOOLS := sbcl:run-lisp
 PKG   := sbcl gawk neovim tmux

@@ -5,7 +5,7 @@
 
 <a href="http://tiny.cc/lithp"><img align="right" src="https://tiny.cc/tiny/qr-image/tiny.cc~lithp~l~150.png" alt="QR"></a>
 
-`lib-` is **less library**: the smallest set of Common Lisp
+`lithp` is **less library**: the smallest set of Common Lisp
 add-ons that measurably shrinks application code — five plain
 constructs plus a handful of utilities, ~130 lines total, no
 reader macros, no dependencies. Found by ablation: we wrote
@@ -23,15 +23,15 @@ sbcl --script fft.lisp --grows  # timing benchmark
 
 **Sections:** [NAME](#name) | [SYNOPSIS](#synopsis) | [KIT](#the-kit-five-constructs) | [UTILITIES](#utilities) | [FILES](#files) | [LICENSE](#license)
 
-**Files:** [lib-.lisp](#file-lib-lisp) | [blog.md](#file-blog-md) | [fft.lisp](#file-fft-lisp) | [small.lisp](#file-small-lisp) | [to_small.lisp](#file-to_small-lisp) | [yuck.lisp](#file-yuck-lisp) | [tiny.lisp](#file-tiny-lisp) | [tiny.vim](#file-tiny-vim) | [Makefile](#file-makefile)
+**Files:** [lithp.lisp](#file-lithp-lisp) | [blog.md](#file-blog-md) | [fft.lisp](#file-fft-lisp) | [small.lisp](#file-small-lisp) | [to_small.lisp](#file-to_small-lisp) | [yuck.lisp](#file-yuck-lisp) | [tiny.lisp](#file-tiny-lisp) | [tiny.vim](#file-tiny-vim) | [Makefile](#file-makefile)
 
 ## NAME
 
-    lib- — less library: the pay-rent subset (130 lines, no deps)
+    lithp — less library: the pay-rent subset (130 lines, no deps)
 
 ## SYNOPSIS
 
-    (load "lib-.lisp")
+    (load "lithp.lisp")
     (defvar *settings* '((seed . 1234567891) (file . "data.csv")))
     (defmacro my (k) `(cdr (assoc ',k *settings*)))
     (cli *settings*)                ; -s 42 on argv updates seed
@@ -63,7 +63,7 @@ Plus `(keys h)` — list of hash keys.
 
 | file | what |
 |------|------|
-| `lib-.lisp`      | this library |
+| `lithp.lisp`      | this library |
 | `blog.md`        | the ablation study: why these and only these |
 | `yuck.lisp`     | naive CLOS port, 605 lines — the cautionary tale |
 | `small.lisp`    | plain ANSI CL, design only, 261 lines |
