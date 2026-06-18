@@ -22,6 +22,17 @@ run: ## run the sweet-spot version
 	$(call need,sbcl,run)
 	@sbcl --script fft.lisp
 
+# ---- pdf: scheme src -> pdf via a2ps (konfig's rule is lisp-only) -
+~/tmp/konfig/%.pdf : %.scm  ## scheme src -> pdf via a2ps
+	$(call need,a2ps,pdf)
+	$(call need,ps2pdf,pdf)
+	@mkdir -p ~/tmp/konfig
+	@a2ps -Bj --$(Orient) --line-numbers=1 --highlight-level=$(HL) \
+	      --borders=no --pro=color --footer="page %p." \
+	      --pretty-print=scheme -M letter --font-size=$(Font) \
+	      --columns $(Cols) -o - $< | ps2pdf - $@
+	@$(OPEN) $@
+
 # ---- tests: one UPPERCASE rule per mode; `test` discovers all -----
 # strip wall-clock noise (e.g. "0.042 s -> 4.2 ms") so benchmark
 # variants compare on deterministic content (tree count, etc.)
