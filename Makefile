@@ -5,7 +5,7 @@ KONFIG ?= ../konfig
 APP   := lithp
 MAIN  := fft.lisp
 EXT   := lisp
-LANG  := lisp
+LANG  := clisp        # a2ps has clisp.ssh/elisp.ssh, no 'lisp.ssh'
 LINT  := sbcl --noinform --disable-debugger \
            --eval '(handler-bind ((warning (function muffle-warning))) \
                      (compile-file "lithp.lisp"))' \
