@@ -1,7 +1,8 @@
 ; vim: set ft=lisp ts=2 sw=2 et :
 ; fft.lisp -- small.lisp rebuilt on lithp.lisp:
-; plain ANSI CL plus only fn ? let+ o ats, and a
-; local (my k) settings macro. No reader macros, no
+; plain ANSI CL plus only fn ? let+ o ats, and the
+; local (my k) settings + (def2 ...) num/sym macros.
+; No reader macros, no
 ; def/def+/!/{} sugar.
 ; (c) 2026 Tim Menzies timm@ieee.org, MIT license.
 
@@ -20,6 +21,11 @@
               (&optional (n 0) (mu 0.0) (m2 0.0))))
   n mu m2)
 
+(defmacro def2 (name (self &rest args) num sym)
+  "One op, two cases: a num body then a hash-table (sym) body."
+  `(progn (defmethod ,name ((,self num) ,@args) ,num)
+          (defmethod ,name ((,self hash-table) ,@args) ,sym)))
+
 (defun sym () (o))
 
 (defun sd (i)
@@ -37,21 +43,18 @@
   (let ((z (/ (- v (mu i)) (+ (sd i) 1e-32))))
     (/ 1 (+ 1 (exp (* -1.7 (max -3 (min 3 z))))))))
 
-(defmethod mix ((i hash-table) j &optional (w 1))
-  (let ((out (o)))
-    (maphash (fn (incf (ats out $1 0) $2)) i)
-    (maphash (fn (incf (ats out $1 0) (* w $2))) j)
-    out))
-
-(defmethod mix ((i num) j &optional (w 1))
+(def2 mix (i j &optional (w 1))
   (let ((m (+ (n i) (* w (n j))))
         (d (- (mu j) (mu i))))
     (if (< m 1) (num)
         (num m
-             (/ (+ (* (n i) (mu i)) (* w (n j) (mu j)))
-                m)
+             (/ (+ (* (n i) (mu i)) (* w (n j) (mu j))) m)
              (+ (m2 i) (* w (m2 j))
-                (/ (* w d d (n i) (n j)) m))))))
+                (/ (* w d d (n i) (n j)) m)))))
+  (let ((out (o)))
+    (maphash (fn (incf (ats out $1 0) $2)) i)
+    (maphash (fn (incf (ats out $1 0) (* w $2))) j)
+    out))
 
 ;;; 2. data ----------------------------------------------------
 (defstruct (data (:conc-name) (:constructor %data))
@@ -75,9 +78,9 @@
 (defun add (i v &optional (w 1))
   (if (eq v '?) i (add+ i v w)))
 
-(defmethod add+ ((i hash-table) v w)
-  (incf (ats i v 0) w) i)
-(defmethod add+ ((i num) v w) (welford i v w))
+(def2 add+ (i v w)
+  (welford i v w)
+  (progn (incf (ats i v 0) w) i))
 
 (defun adds (lst &optional (it (num)))
   (dolist (v lst it) (setf it (add it v))))
@@ -85,13 +88,13 @@
 ;;; 3. discretization ------------------------------------------
 (defun col (i at) (ats (cols i) at))
 
-(defmethod bin ((c hash-table) v) v)
-(defmethod bin ((c num) v)
-  (floor (* (my bins) (norm c v))))
+(def2 bin (c v)
+  (floor (* (my bins) (norm c v)))
+  v)
 
-(defmethod top ((c hash-table) v old) v)
-(defmethod top ((c num) v old)
-  (max (or old (- big)) v))
+(def2 top (c v old)
+  (max (or old (- big)) v)
+  v)
 
 (defun cuts (i lst y)
   (let ((ys (mapcar y lst)))
@@ -108,16 +111,13 @@
               (ats hi k) (top c v (ats hi k)))))
     (cuts-of c bins hi at)))
 
-(defmethod cuts-of ((c hash-table) bins hi at)
-  (mapcar (fn (list at (ats hi $1) (ats hi $1)
-                    (ats bins $1)))
-          (keys bins)))
-
-(defmethod cuts-of ((c num) bins hi at)
+(def2 cuts-of (c bins hi at)
   (let ((l (num)))
     (mapcar (fn (setf l (mix l (ats bins $1)))
                 (list at (- big) (ats hi $1) l))
-            (butlast (sort (keys bins) #'<)))))
+            (butlast (sort (keys bins) #'<))))
+  (mapcar (fn (list at (ats hi $1) (ats hi $1) (ats bins $1)))
+          (keys bins)))
 
 ;;; 4. grow trees ----------------------------------------------
 (defun mink (lst &optional (p (my p)))
@@ -164,12 +164,10 @@
      'left (? nd left) 'right right))
 
 ;;; 5. use trees -----------------------------------------------
-(defmethod predict ((i num) row) (mu i))
-(defmethod predict ((i hash-table) row)
-  (predict (if (has (nth (? i at) row)
-                    (? i lo) (? i hi))
-               (? i left)
-               (? i right))
+(def2 predict (i row)
+  (mu i)
+  (predict (if (has (nth (? i at) row) (? i lo) (? i hi))
+               (? i left) (? i right))
            row))
 
 (defun err (tr lst y)
