@@ -99,7 +99,7 @@
     (loop for ln = (read-line in nil) while ln
           for l = (string-trim '(#\space #\tab #\return) ln)
           unless (or (equal l "") (eql (char l 0) #\#))
-          collect (mapcar #'thing (cells l)))))
+          collect (map 'vector #'thing (cells l)))))   ; rows are vectors
 
 ;;; ----- cli ---------------------------------------------------
 (defun args ()
