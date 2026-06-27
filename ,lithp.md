@@ -23,7 +23,7 @@ sbcl --script fft.lisp --grows  # timing benchmark
 
 **Sections:** [NAME](#name) | [SYNOPSIS](#synopsis) | [KIT](#the-kit-five-constructs) | [UTILITIES](#utilities) | [FILES](#files) | [LICENSE](#license)
 
-**Files:** [lithp.lisp](#file-lithp-lisp) | [blog.md](#file-blog-md) | [fft.lisp](#file-fft-lisp) | [small.lisp](#file-small-lisp) | [to_small.lisp](#file-to_small-lisp) | [yuck.lisp](#file-yuck-lisp) | [tiny.lisp](#file-tiny-lisp) | [tiny.vim](#file-tiny-vim) | [Makefile](#file-makefile)
+**Files:** [lithp.lisp](http://tiny.cc/lithp#file-lithp-lisp) | [blog.md](http://tiny.cc/lithp#file-blog-md) | [fft.lisp](http://tiny.cc/lithp#file-fft-lisp) | [small.lisp](http://tiny.cc/lithp#file-small-lisp) | [to_small.lisp](http://tiny.cc/lithp#file-to_small-lisp) | [yuck.lisp](http://tiny.cc/lithp#file-yuck-lisp) | [tiny.lisp](http://tiny.cc/lithp#file-tiny-lisp) | [tiny.vim](http://tiny.cc/lithp#file-tiny-vim) | [Makefile](http://tiny.cc/lithp#file-makefile)
 
 ## NAME
 
