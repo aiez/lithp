@@ -1,10 +1,5 @@
 # Writing Succinct Lisp: an Ablation Study
 
-<a href="https://github.com/aiez/lithp"><img align="right"
-src="https://tiny.cc/tiny/qr-image/tiny.cc~lithp~l~150.png"
-alt="QR: https://github.com/aiez/lithp"></a>
-
- 
 One sunny day, me and claude-fable-5 went for a walk.    
 This is what we found. -- Tim Menzies  (timm@ieee.org)
 

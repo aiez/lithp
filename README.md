@@ -3,8 +3,6 @@
 
 ### [https://github.com/aiez/lithp](https://github.com/aiez/lithp)
 
-<a href="https://github.com/aiez/lithp"><img align="right" src="https://tiny.cc/tiny/qr-image/tiny.cc~lithp~l~150.png" alt="QR"></a>
-
 `lithp` is **less library**: the smallest set of Common Lisp
 add-ons that measurably shrinks application code — five plain
 constructs plus a handful of utilities, ~130 lines total, no
