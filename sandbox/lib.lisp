@@ -1,4 +1,10 @@
 ; vim: set lispwords+=loop,aif,set-macro-character :
+#+sbcl (declaim (sb-ext:muffle-conditions
+                  warning style-warning))
+
+
+(defmacro ? (x k &rest ks)
+  (if ks `(? (ats ,x ',k) ,@ks) `(ats ,x ',k)))
 
 (set-macro-character #\$ 
   (lambda (stream ch)
@@ -46,7 +52,7 @@
       (setf (gethash k x) v)
       (setf (slot-value x k) v)))
 
-(defun cli (it)
+(defun cli (it run)
   (let ((args #+sbcl (cdr sb-ext:*posix-argv*)
               #+clisp ext:*args*))
     (loop for (f v) on args do
@@ -54,11 +60,9 @@
         (if (equalp f (string slot))
           (setf (slot-value it slot) (thing v)))))
     (loop for s in args do
-      (let ((fun (intern (format nil "~{~a~}" s))))
+      (let ((fun (intern (format nil "eg~{~a~}" s))))
         (when (fboundp fun)
-          (setf *seed* (--seed it))
-          (funcall fun)))))
-    i)
+          (funcall run fun))))))
 
 (defvar *seed* 1234567891)
 (defun rint (&optional (n 2)) (floor (rand n)))
