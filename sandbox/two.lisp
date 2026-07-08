@@ -1,0 +1,74 @@
+; vim: set lispwords+=loop,aif :
+(load "lib")
+
+(defstruct (settings (:conc-name))
+  (--seed 1234567891) (--p 2) (--bins 7) (--depth 4) 
+  (--file  "../../optimiz/auto93.csv" --big 1E32))
+
+(defvar it (make-settings))
+
+;---------------------------------------------------------------
+(defstruct sym (at 0) (txt " ") (n 0) (w 1) (has (o)))
+(defstruct num (at 0) (txt " ") (n 0) (w 1) (mu 0.0) (m2 0.0))))
+
+(defstruct (cols (:constructor %make-cols)) names all x y)
+(defstruct (data (:constructor %male-data)) cols (rows (vec))
+
+;---------------------------------------------------------------
+(defmethod mid ((i num)) $mu)
+
+(defmethod mid ((i sym) &aux best (most -1e30))
+  (labels ((most (k v) (if (> v most) (setf most v best k))))
+    (maphash #'most $has)
+    best))
+
+(defmethod var ((i sym))
+  (loop for v being the hash-values of $has 
+    sum (* (/ v $n) (log (/ $n v) 2))))
+
+(defmethod var ((i num))
+  (if (< $n 2) 0
+      (sqrt (/ (max 0 ($m2 i)) (1- $n)))))
+
+(defmethod add ((i sym) v &optional (w 1)) 
+  (incf $n  w)  
+  (incf (ats $has 'a 0) w))  
+
+(defmethod add ((i num) v &optional (w 1))
+  (incf $n w)
+  (if (>= $n i 1) 
+    (let ((d (- v $mu)))
+      (incf $mu (/ (* w d) $n))
+      (incf $m2 (* w d (- v $mu))))))
+
+(defmethod norm ((i num))
+  (let ((z (/ (- v $mu ) (+ (var i) 1e-32))))
+    (/ 1 (+ 1 (exp (* -1.7 (max -3 (min 3 z))))))))
+
+;---------------------------------------------------------------
+(defun make-data (&optional src &aux (i (%make-data)))
+  (labels ((inc (row) (add i row)))
+    (if (stringp src) (mapcsv #'inc src) (mapc #'inc src))
+    i))
+
+(defmethod add ((i data) row &optional w)
+  (if (not $cols)
+    (return (setf $cols (make-cols row))))
+  (dolist (col (? cols all)) (add col (elm (? col at) row)))
+  (vector-push-extend $rows row))
+
+(defun make-col (names &optional (i (%make-cols :names names)))
+  (loop for s across names for at from 0 do 
+    (let* ((a (char s 0))
+           (z (char s (1- (length s))))
+           (col (if (lower-case-p a) 
+                  (make-num :at at :txt s)
+                  (make-sym :at at :txt s))))
+      (end! $all col)
+      (cond ((find z "-+!")
+             (setf (ats col 'goal) (if (eql z #\+) 1 0))
+             (end! $y  col))
+            ((not (eql z #\X)) (end! $x col)))))
+  i)
+
+

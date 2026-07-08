@@ -94,12 +94,12 @@
         collect (string-trim " " (subseq s a b))
         while b))
 
-(defun csv (file)
+(defun csv (file fun)
   (with-open-file (in file)
     (loop for ln = (read-line in nil) while ln
           for l = (string-trim '(#\space #\tab #\return) ln)
           unless (or (equal l "") (eql (char l 0) #\#))
-          collect (map 'vector #'thing (cells l)))))   ; rows are vectors
+          (funcall fun (map 'vector #'thing (cells l))))) )
 
 ;;; ----- cli ---------------------------------------------------
 (defun args ()
