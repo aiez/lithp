@@ -72,7 +72,6 @@
   (vector-push-extend $rows row))
 
 ;---------------------------------------------------------------
-(defun eg--it () (print it))
-(print (--seed it))
-(cli it (lambda (f) (setf *seed* (--seed it)) (funcall f)))
+(defun eg--it () (format t "~&~s" it))
+(cli it)
 

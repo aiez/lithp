@@ -2,7 +2,6 @@
 #+sbcl (declaim (sb-ext:muffle-conditions
                   warning style-warning))
 
-
 (defmacro ? (x k &rest ks)
   (if ks `(? (ats ,x ',k) ,@ks) `(ats ,x ',k)))
 
@@ -52,17 +51,20 @@
       (setf (gethash k x) v)
       (setf (slot-value x k) v)))
 
-(defun cli (it run)
+(defun cli (it)
   (let ((args #+sbcl (cdr sb-ext:*posix-argv*)
               #+clisp ext:*args*))
     (loop for (f v) on args do
       (dolist (slot (slot-names it))
         (if (equalp f (string slot))
           (setf (slot-value it slot) (thing v)))))
+    (print args)
     (loop for s in args do
       (let ((fun (intern (format nil "eg~{~a~}" s))))
+        (print fun)
         (when (fboundp fun)
-          (funcall run fun))))))
+          (setf *seed* (? it --seed))
+          (funcall fun))))))
 
 (defvar *seed* 1234567891)
 (defun rint (&optional (n 2)) (floor (rand n)))
