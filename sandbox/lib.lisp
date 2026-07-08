@@ -58,10 +58,8 @@
       (dolist (slot (slot-names it))
         (if (equalp f (string slot))
           (setf (slot-value it slot) (thing v)))))
-    (print args)
     (loop for s in args do
-      (let ((fun (intern (format nil "eg~{~a~}" s))))
-        (print fun)
+      (let ((fun (intern (format nil "EG~:@(~a~)" s))))
         (when (fboundp fun)
           (setf *seed* (? it --seed))
           (funcall fun))))))
@@ -79,5 +77,7 @@
     h))
 
 (defun vec (&rest xs)
-  (make-array (length xs) 
+  (make-array (length xs)
     :fill-pointer t :adjustable t :initial-contents xs))
+
+(defun end! (v x) (vector-push-extend x v) v)

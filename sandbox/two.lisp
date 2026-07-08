@@ -11,8 +11,9 @@
 (defstruct sym (at 0) (txt " ") (n 0) (w 1) (has (o)))
 (defstruct num (at 0) (txt " ") (n 0) (w 1) (mu 0.0) (m2 0.0))
 
-(defstruct (cols (:constructor %make-cols)) names all x y)
-(defstruct (data (:constructor %male-data)) cols (rows (vec)))
+(defstruct (cols (:constructor %make-cols))
+  names (all (vec)) (x (vec)) (y (vec)))
+(defstruct (data (:constructor %make-data)) cols (rows (vec)))
 
 ;---------------------------------------------------------------
 (defmethod mid ((i num)) $mu)
@@ -30,9 +31,9 @@
   (if (< $n 2) 0
       (sqrt (/ (max 0 $m2) (1- $n)))))
 
-(defmethod add ((i sym) v &optional (w 1)) 
-  (incf $n  w)  
-  (incf (ats $has 'a 0) w))  
+(defmethod add ((i sym) v &optional (w 1))
+  (incf $n  w)
+  (incf (ats $has v 0) w))
 
 (defmethod add ((i num) v &optional (w 1))
   (incf $n w)
@@ -52,26 +53,26 @@
     i))
 
 (defun make-cols (names &optional (i (%make-cols :names names)))
-  (loop for s across names for at from 0 do 
+  (loop for s across names for at from 0 do
     (let* ((a (char s 0))
            (z (char s (1- (length s))))
-           (col (if (lower-case-p a) 
+           (col (if (upper-case-p a)
                   (make-num :at at :txt s)
                   (make-sym :at at :txt s))))
       (end! $all col)
       (cond ((find z "-+!")
-             (setf (ats col 'goal) (if (eql z #\+) 1 0))
+             (setf (? col w) (if (eql z #\+) 1 0))
              (end! $y  col))
             ((not (eql z #\X)) (end! $x col)))))
   i)
 
-(defmethod add ((i data) row &optional w)
+(defmethod add ((i data) row &optional (w 1))
+  (declare (ignore w))
   (if (not $cols)
     (return-from add (setf $cols (make-cols row))))
-  (dolist (col (? $cols all)) (add col (elt (? col at) row)))
-  (vector-push-extend $rows row))
+  (loop for col across (? $cols all) do
+    (let ((v (elt row (? col at))))
+      (unless (eq v '?) (add col v w))))
+  (end! $rows row))
 
-;---------------------------------------------------------------
-(defun eg--it () (format t "~&~s" it))
-(cli it)
 
