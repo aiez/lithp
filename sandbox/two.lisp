@@ -1,4 +1,22 @@
 ; vim: set lispwords+=loop,aif :
+#|
+random and active tie a lot (61%). otheriwse, 
+active wins twice as much as random, and when it does,
+active wins twice as big. 
+
+mu(win(active)) - mu(win(random)), 20 repeats, 127 data sets
+
+[-15,-10)   1 %  *
+[-10, -5)   5 %  **
+[ -5,  0)   6 %  ***
+   ties=0  61 %  **************************
+[  0,  5)  17 %  ********
+[  5, 10)   4 %  **
+[ 10, 15)   6 %  ***
+[ 15, 20)   0 %
+[ 20, 25)   1 %  *
+|#
+
 (load "lib")
 
 (defstruct (settings (:conc-name))
@@ -80,7 +98,7 @@
                   (make-sym :at at :txt s))))
       (push col $all)
       (cond ((find z "-+!")
-             (setf (? col w) (if (eql z #\+) 1 0))
+             (if (eql z #\-) (setf (? col w) 0))
              (push col $y))
             ((not (eql z #\X)) (push col $x)))))
   (setf $all (nreverse $all) $x (nreverse $x) $y (nreverse $y))
@@ -96,12 +114,11 @@
   (make-data (cons (? data cols names) rows)))
 
 (defmethod add ((i data) row &optional (w 1))
-  (if (not $cols)
-    (return-from add (setf $cols (make-cols row))))
-  (dolist (col (? $cols all))
-    (let ((v (elt row (? col at))))
-      (unless (eq v '?) (add col v w))))
-  (push row $rows)
+  (if $cols
+    (dolist (col (? $cols all) (push row $rows))
+      (let ((v (elt row (? col at))))
+        (unless (eq v '?) (add col v w))))
+    (setf $cols (make-cols row)))
   row)
 
 ;---------------------------------------------------------------
@@ -174,30 +191,6 @@
       (setf (ats lab r) r)
       (incf grown))
     (if (ats lab r) (push r here))))
-
-;---------------------------------------------------------------
-(defun wins (data)
-  (let* ((ys (sort (mapcar (lambda (r) (disty data r))
-                           (? data rows))
-                   #'<))
-         (lo (first ys))
-         (b4 (elt ys (floor (length ys) 2))))
-    (lambda (r)
-      (max -100 (min 100 (* 100 
-        (- 1 (/ (- (disty data r) lo) (+ (- b4 lo) 1e-32)))))))))
-
-(defun holdout (data)
-  (labels ((y (r) (disty data r)))
-    (let* ((rows  (shuffle (? data rows)))
-           (half  (floor (length rows) 2))
-           (train (subseq rows 0 half))
-           (test  (nthcdr half rows))
-           (got   (landscape (clone data train)))
-           (tr    (tree data got #'y)))
-      (argmin #'y
-              (subseq (sort test #'<
-                            :key (lambda (r) (leaf data tr r)))
-                      0 (? my --check))))))
 
 ;---------------------------------------------------------------
 (defmethod has? ((i sym) w v) (or (eq w '?) (equal w v)))
@@ -308,3 +301,57 @@
           (length (leaves i))
           (length (used i))
           (length (? data cols x))))
+
+;---------------------------------------------------------------
+(defun wins (data)
+  (let* ((ys (sort (mapcar (lambda (r) (disty data r))
+                           (? data rows))
+                   #'<))
+         (lo (first ys))
+         (b4 (elt ys (floor (length ys) 2))))
+    (lambda (r)
+      (max -100 (min 100 (* 100 
+        (- 1 (/ (- (disty data r) lo) (+ (- b4 lo) 1e-32)))))))))
+
+(defun cliffs (xs ys &aux (gt 0) (lt 0))
+  (dolist (x xs)
+    (dolist (y ys)
+      (cond ((> x y) (incf gt))
+            ((< x y) (incf lt)))))
+  (/ (abs (- gt lt))
+     (+ (* (length xs) (length ys)) 1e-32)))
+
+(defun ks (xs ys)
+  (labels ((cdf (v lst)
+             (/ (count-if (lambda (z) (<= z v)) lst)
+                (length lst))))
+    (loop for v in (append xs ys)
+          maximize (abs (- (cdf v xs) (cdf v ys))))))
+
+(defun cohen (xs ys &optional (eps 0.35))
+  (let* ((x (adds xs)) (y (adds ys))
+         (n (? x n))   (m (? y n))
+         (sd (sqrt (/ (+ (* (1- n) (expt (spread x) 2))
+                         (* (1- m) (expt (spread y) 2)))
+                      (+ n m -2)))))
+    (<= (abs (- (mid x) (mid y))) (* eps (+ sd 1e-32)))))
+
+(defun same (xs ys &optional (cliff 0.195) (conf 1.36))
+  (and (cohen xs ys)
+       (<= (cliffs xs ys) cliff)
+       (let ((n (length xs)) (m (length ys)))
+         (<= (ks xs ys)
+             (* conf (sqrt (/ (+ n m) (* n m))))))))
+
+(defun holdout (data)
+  (labels ((y (r) (disty data r)))
+    (let* ((rows  (shuffle (? data rows)))
+           (half  (floor (length rows) 2))
+           (train (subseq rows 0 half))
+           (test  (nthcdr half rows))
+           (got   (landscape (clone data train)))
+           (tr    (tree data got #'y)))
+      (argmin #'y
+              (subseq (sort test #'<
+                            :key (lambda (r) (leaf data tr r)))
+                      0 (? my --check))))))

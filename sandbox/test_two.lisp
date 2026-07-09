@@ -147,6 +147,45 @@
   (if (search "auto93" (? my --file))
     (assert (> (mid n) 50))))
 
+(defun eg--same (&aux xs)
+  (dotimes (k 20) (push (rand) xs))
+  (let ((ys (mapcar (lambda (x) (+ x 0.02)) xs))
+        (zs (mapcar (lambda (x) (+ x 1)) xs)))
+    (format t "~&same: self ~a nudged ~a shifted ~a~%"
+            (same xs xs) (same xs ys) (same xs zs))
+    (assert (same xs xs))
+    (assert (same xs ys))
+    (assert (not (same xs zs)))))
+
+(defun deltas (i knob v1 v2 &aux (w (wins i)) (v0 (ats my knob)))
+  "20 paired holdouts per knob value; 0 if same, else win gap"
+  (labels ((runs (v &aux out)
+             (setf (ats my knob) v)
+             (dotimes (k 20 out)
+               (setf *seed* (+ (? my --seed) k))
+               (push (funcall w (holdout i)) out))))
+    (let* ((a (runs v1))
+           (b (runs v2))
+           (d (if (same a b) 0
+                (- (mid (adds a)) (mid (adds b))))))
+      (setf (ats my knob) v0)
+      (format t "~&~6,1f ~a~%" d (? my --file)))))
+
+(defun eg--delta (&aux (i (make-data (? my --file))))
+  "rq2: active vs random labelling, budget 50"
+  (setf (? i rows) (few (? i rows) (? my --cap)))
+  (deltas i '--landscape "active" "random"))
+
+(defun eg--budgets (&aux (i (make-data (? my --file))))
+  "rq1: budget 50 vs 20, both active"
+  (setf (? i rows) (few (? i rows) (? my --cap)))
+  (deltas i '--budget 50 20))
+
+(defun eg--saturate (&aux (i (make-data (? my --file))))
+  "rq1 caveat: budget 200 vs 50 (sampler stops near 40)"
+  (setf (? i rows) (few (? i rows) (? my --cap)))
+  (deltas i '--budget 200 50))
+
 (defun egs ()
   (sort (loop for s being the present-symbols of *package*
               when (and (fboundp s)
