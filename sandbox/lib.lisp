@@ -16,7 +16,7 @@
            #+clisp clos:class-slots
            (find-class (if (symbolp x) x (type-of x))))))
 
-(defmacro aif (test then else)
+(defmacro aif (test then &optional else)
   `(let ((it ,test))
      (if it ,then ,else)))
 
@@ -27,7 +27,7 @@
         (*read-eval*))
   (aif (assoc s opt :test #'equal)
     (cdr it)
-    (let ((x (read-from-string s nil)))
+    (let ((x (ignore-errors (read-from-string s nil))))
       (if (numberp x) x s)))))
 
 (defun things (s &optional (ch #\,) (start 0))
@@ -45,23 +45,27 @@
 (defun ats (x k &optional d)
   (if (hash-table-p x) (gethash k x d) (slot-value x k)))
 
+(defun ats! (x k new)
+  "get x's k, else stash and return a fresh (new)"
+  (or (ats x k) (setf (ats x k) (funcall new))))
+
 (defun (setf ats) (v x k &optional d)
   (declare (ignore d))
   (if (hash-table-p x)
       (setf (gethash k x) v)
       (setf (slot-value x k) v)))
 
-(defun cli (it)
+(defun cli (my)
   (let ((args #+sbcl (cdr sb-ext:*posix-argv*)
               #+clisp ext:*args*))
     (loop for (f v) on args do
-      (dolist (slot (slot-names it))
+      (dolist (slot (slot-names my))
         (if (equalp f (string slot))
-          (setf (slot-value it slot) (thing v)))))
+          (setf (slot-value my slot) (thing v)))))
     (loop for s in args do
       (let ((fun (intern (format nil "EG~:@(~a~)" s))))
         (when (fboundp fun)
-          (setf *seed* (? it --seed))
+          (setf *seed* (? my --seed))
           (funcall fun))))))
 
 (defvar *seed* 1234567891)
@@ -76,8 +80,32 @@
     (loop for (k v) on kvs by #'cddr do (setf (gethash k h) v))
     h))
 
-(defun vec (&rest xs)
-  (make-array (length xs)
-    :fill-pointer t :adjustable t :initial-contents xs))
+(defun cat (&rest xs) (format nil "~{~a~}" xs))
 
-(defun end! (v x) (vector-push-extend x v) v)
+(defun lt (a b)
+  "order numbers numerically, anything else textually"
+  (if (and (numberp a) (numberp b))
+    (< a b)
+    (string< (princ-to-string a) (princ-to-string b))))
+
+(defun argmin (fun lst &aux best (lo 1e32))
+  "element of lst minimizing (fun x)"
+  (dolist (x lst best)
+    (let ((v (funcall fun x)))
+      (if (< v lo) (setf lo v best x)))))
+
+(defun argmax (fun lst &aux best (hi -1e32))
+  "element of lst maximizing (fun x)"
+  (dolist (x lst best)
+    (let ((v (funcall fun x)))
+      (if (> v hi) (setf hi v best x)))))
+
+(defun shuffle (lst &aux (v (coerce lst 'vector)))
+  "Fisher-Yates, driven by the seeded rand"
+  (loop for i from (1- (length v)) downto 1 do
+    (rotatef (elt v i) (elt v (rint (1+ i)))))
+  (coerce v 'list))
+
+(defun few (lst k)
+  "k items picked at random"
+  (subseq (shuffle lst) 0 (min k (length lst))))

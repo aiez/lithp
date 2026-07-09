@@ -1,6 +1,8 @@
 # vim: ts=2 sw=2 sts=2 et :
 # knobs only; shared targets live in $(KONFIG)/Makefile
-KONFIG ?= ../konfig
+# ROOT = this file's dir, so includes work from subdirs too
+ROOT   := $(dir $(lastword $(MAKEFILE_LIST)))
+KONFIG ?= $(ROOT)../konfig
 
 APP   := lithp
 MAIN  := fft.lisp

@@ -6,9 +6,18 @@ Lines fit 65 chars.
 
 ## Conventions
 
+- **Lines ≤ 65 chars, no exceptions.** Check with
+  `awk 'length > 65' *.lisp`.
+- **Lots of small functions.** One job each; a function
+  should fit in a glance (~10 lines). Helpers earn a name on
+  second use; single-caller helpers get folded back in.
+- **`it` belongs to `aif`; settings global is `my`.**
+  (A `(defvar it)` once collided with `aif`'s anaphor —
+  the special binding leaked dynamically into callees.)
 - **cols = lists** (dolist, push + nreverse);
-  **row, rows = vectors** (O(1) `elt` by column index,
-  O(1) append via `end!`, in-place sort).
+  **rows = list** (pushed, newest first; subsets and
+  partitions are lists anyway, and SBCL sorts lists fast);
+  **each row = a vector** (O(1) `elt` by column index).
 - `&aux` for locals; `aif`/`it` anaphora;
   `$slot` reader macro = `(ats i 'slot)`;
   `?` macro for nested slot access.

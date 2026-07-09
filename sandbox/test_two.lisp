@@ -2,9 +2,9 @@
 (load "two")
 
 ;----------------------------------------------------------------
-(defun eg--it ()
-  (format t "~&~s~%" it)
-  (assert (settings-p it)))
+(defun eg--my ()
+  (format t "~&~s~%" my)
+  (assert (settings-p my)))
 
 (defun eg--thing ()
   (let ((got (mapcar #'thing '(" 23 " "3.14" "-1e2"
@@ -36,16 +36,16 @@
   (mapcsv (lambda (row)
             (if (< (incf n) 4) (print row))
             (assert (= (length row) 8)))
-          (? it --file))
+          (? my --file))
   (format t "~&rows ~a~%" n)
   (assert (= n 399)))
 
-(defun eg--data (&aux (i (make-data (? it --file))))
+(defun eg--data (&aux (i (make-data (? my --file))))
   (format t "~&rows ~a |x| ~a |y| ~a~%"
           (length (? i rows))
           (length (? i cols x))
           (length (? i cols y)))
-  (loop for col across (? i cols y) do
+  (dolist (col (? i cols y))
     (format t "~a mid ~,2f div ~,2f~%"
             (? col txt) (mid col) (spread col)))
   (assert (= (length (? i rows)) 398))
@@ -55,6 +55,93 @@
   (let ((mpg (elt (? i cols y) 2)))
     (assert (< (abs (- (mid mpg) 23.84)) 0.1))
     (assert (< (abs (- (spread mpg) 8.34)) 0.1))))
+
+(defun eg--cuts (&aux (i (make-data (? my --file))))
+  (let* ((rows (? i rows))
+         (mpg  (elt (? i cols y) 2))
+         (best (split i rows
+                      (lambda (r) (elt r (? mpg at))))))
+    (format t "~&best ~,2f at ~a v ~a (sd ~,2f)~%"
+            (first best)
+            (? (elt (? i cols all) (second best)) txt)
+            (third best) (spread mpg))
+    (assert (< (first best) (spread mpg)))
+    (assert (eql (third best) 183))))
+
+(defun eg--tree (&aux (i (make-data (? my --file))))
+  (let* ((rows (? i rows))
+         (mpg  (elt (? i cols y) 2))
+         (tr   (tree i rows
+                     (lambda (r) (elt r (? mpg at))))))
+    (show i tr)
+    (about i tr)
+    (let ((lvs (leaves tr)))
+      (assert (? tr at))
+      (assert (> (length lvs) 3))
+      (assert (= 398 (loop for l in lvs sum (? l n))))
+      (assert (<= 1 (length (used tr))
+                  (length (? i cols x))))
+      (assert (numberp (leaf i tr (first rows)))))))
+
+(defun eg--dists (&aux (i (make-data (? my --file))))
+  (let* ((rows (? i rows))
+         (ys   (sort (mapcar (lambda (r) (disty i r)) rows)
+                     #'<))
+         (r1   (first rows))
+         (r2   (second rows)))
+    (format t "~&disty lo ~,3f hi ~,3f~%"
+            (first ys) (car (last ys)))
+    (assert (<= 0 (first ys) (car (last ys)) 1))
+    (assert (= 0 (distx i r1 r1)))
+    (assert (< (abs (- (distx i r1 r2) (distx i r2 r1)))
+               1e-6))
+    (assert (<= 0 (distx i r1 r2) 1))))
+
+(defun eg--land (&aux (i (make-data (? my --file))))
+  (let* ((lab (landscape i))
+         (ys  (mapcar (lambda (r) (disty i r)) lab)))
+    (format t "~&labelled ~a best ~,3f worst ~,3f~%"
+            (length lab) (first ys) (car (last ys)))
+    (assert (<= (length lab)
+                (- (? my --budget) (? my --check))))
+    (assert (equal ys (sort (copy-list ys) #'<)))
+    (assert (< (first ys) 0.4))))
+
+(defun eg--wins (&aux (i (make-data (? my --file))))
+  (let* ((w    (wins i))
+         (rows (? i rows))
+         (best (argmin (lambda (r) (disty i r)) rows)))
+    (format t "~&win(best)= ~a win(worst)= ~a~%"
+            (round (funcall w best))
+            (round (funcall w (argmax
+                                (lambda (r) (disty i r))
+                                rows))))
+    (assert (= 100 (round (funcall w best))))
+    (dolist (r (few rows 30))
+      (assert (<= -100 (funcall w r) 100)))))
+
+(defun eg--holdout (&aux (i (make-data (? my --file))))
+  (setf (? i rows) (few (? i rows) (? my --cap)))
+  (let* ((got (holdout i))
+         (w   (round (funcall (wins i) got))))
+    (format t "~&picked ~s~%win= ~a disty= ~,3f~%"
+            got w (disty i got))
+    (assert (vectorp got))
+    (assert (<= -100 w 100))
+    (if (search "auto93" (? my --file))
+      (assert (> w 0)))))
+
+(defun eg--holdouts (&aux (i (make-data (? my --file)))
+                          w (n (make-num)))
+  (setf (? i rows) (few (? i rows) (? my --cap))
+        w (wins i))
+  (dotimes (k 20)
+    (add n (funcall w (holdout i))))
+  (format t "~&mu ~5,1f sd ~5,1f ~a~%"
+          (mid n) (spread n) (? my --file))
+  (assert (<= -100 (mid n) 100))
+  (if (search "auto93" (? my --file))
+    (assert (> (mid n) 50))))
 
 (defun egs ()
   (sort (loop for s being the present-symbols of *package*
@@ -67,8 +154,8 @@
 (defun eg--all ()
   (dolist (s (egs))
     (format t "~&~%; ~(~a~)~%" s)
-    (setf *seed* (? it --seed))
+    (setf *seed* (? my --seed))
     (funcall s)))
 
 ;----------------------------------------------------------------
-(cli it)
+(cli my)
