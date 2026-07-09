@@ -17,6 +17,23 @@
 (defstruct (data (:constructor %make-data)) cols rows)
 
 ;---------------------------------------------------------------
+(defmethod add ((i sym) v &optional (w 1))
+  (incf $n  w)
+  (incf (ats $has v 0) w)
+  v)
+
+(defmethod add ((i num) v &optional (w 1))
+  (incf $n w)
+  (if (>= $n 1)
+    (let ((d (- v $mu)))
+      (incf $mu (/ (* w d) $n))
+      (incf $m2 (* w d (- v $mu)))))
+  v)
+
+(defun adds (lst &optional (i (make-num)))
+  (dolist (v lst i) (add i v)))
+
+;---------------------------------------------------------------
 (defmethod mid ((i num)) $mu)
 
 (defmethod mid ((i sym) &aux best (most -1e30))
@@ -54,11 +71,6 @@
   k)
 
 ;---------------------------------------------------------------
-(defun make-data (&optional src &aux (i (%make-data)))
-  (labels ((inc (row) (add i row)))
-    (if (stringp src) (mapcsv #'inc src) (mapc #'inc src))
-    i))
-
 (defun make-cols (names &optional (i (%make-cols :names names)))
   (loop for s across names for at from 0 do
     (let* ((a (char s 0))
@@ -74,6 +86,15 @@
   (setf $all (nreverse $all) $x (nreverse $x) $y (nreverse $y))
   i)
 
+;---------------------------------------------------------------
+(defun make-data (&optional src &aux (i (%make-data)))
+  (labels ((inc (row) (add i row)))
+    (if (stringp src) (mapcsv #'inc src) (mapc #'inc src))
+    i))
+
+(defun clone (data rows)
+  (make-data (cons (? data cols names) rows)))
+
 (defmethod add ((i data) row &optional (w 1))
   (if (not $cols)
     (return-from add (setf $cols (make-cols row))))
@@ -82,22 +103,6 @@
       (unless (eq v '?) (add col v w))))
   (push row $rows)
   row)
-
-(defun adds (lst &optional (i (make-num)))
-  (dolist (v lst i) (add i v)))
-
-(defmethod add ((i sym) v &optional (w 1))
-  (incf $n  w)
-  (incf (ats $has v 0) w)
-  v)
-
-(defmethod add ((i num) v &optional (w 1))
-  (incf $n w)
-  (if (>= $n 1)
-    (let ((d (- v $mu)))
-      (incf $mu (/ (* w d) $n))
-      (incf $m2 (* w d (- v $mu)))))
-  v)
 
 ;---------------------------------------------------------------
 (defun minkowski (vals &optional (p (? my --p)))
@@ -176,12 +181,36 @@
       (incf grown))
     (if (ats lab r) (push r here))))
 
+;---------------------------------------------------------------
+(defun wins (data)
+  (let* ((ys (sort (mapcar (lambda (r) (disty data r))
+                           (? data rows))
+                   #'<))
+         (lo (first ys))
+         (b4 (elt ys (floor (length ys) 2))))
+    (lambda (r)
+      (max -100 (min 100 (* 100 
+        (- 1 (/ (- (disty data r) lo) (+ (- b4 lo) 1e-32)))))))))
+
+(defun holdout (data)
+  (labels ((y (r) (disty data r)))
+    (let* ((rows  (shuffle (? data rows)))
+           (half  (floor (length rows) 2))
+           (train (subseq rows 0 half))
+           (test  (nthcdr half rows))
+           (got   (landscape (clone data train)))
+           (tr    (tree data got #'y)))
+      (argmin #'y
+              (subseq (sort test #'<
+                            :key (lambda (r) (leaf data tr r)))
+                      0 (? my --check))))))
+
 ;---------------------------------------------------------------
 (defmethod has? ((i sym) w v) (or (eq w '?) (equal w v)))
 (defmethod has? ((i num) w v) (or (eq w '?) (<= w v)))
 
 (defun split (data rows y &optional (accum #'make-num)
-                   (keeper (keeping)))
+                   (keeper (keep-best-cut)))
   (dolist (col (? data cols x) (funcall keeper))
     (let ((at  (? col at))
           (ys  (funcall accum))
@@ -195,7 +224,7 @@
             (push (cons x (add ys (funcall y r))) xy))))
       (cuts xs xy ys at accum keeper))))
 
-(defun keeping (&aux (lo 1e32) kept)
+(defun keep-best-cut (&aux (lo 1e32) kept)
   (labels
     ((big? (m n) (<= (? my --leaf) m (- n (? my --leaf))))
      (score (a b)
@@ -285,35 +314,3 @@
           (length (leaves i))
           (length (used i))
           (length (? data cols x))))
-
-;---------------------------------------------------------------
-(defun clone (data rows)
-  "fresh data over a subset of rows"
-  (make-data (cons (? data cols names) rows)))
-
-(defun wins (data)
-  "grader: row -> % of gap to best closed, [-100,100]"
-  (let* ((ys (sort (mapcar (lambda (r) (disty data r))
-                           (? data rows))
-                   #'<))
-         (lo (first ys))
-         (b4 (elt ys (floor (length ys) 2))))
-    (lambda (r)
-      (max -100
-           (min 100
-                (* 100 (- 1 (/ (- (disty data r) lo)
-                               (+ (- b4 lo) 1e-32)))))))))
-
-(defun holdout (data)
-  "budget rig: landscape train -> tree -> best test row"
-  (labels ((y (r) (disty data r)))
-    (let* ((rows  (shuffle (? data rows)))
-           (half  (floor (length rows) 2))
-           (train (subseq rows 0 half))
-           (test  (nthcdr half rows))
-           (got   (landscape (clone data train)))
-           (tr    (tree data got #'y)))
-      (argmin #'y
-              (subseq (sort test #'<
-                            :key (lambda (r) (leaf data tr r)))
-                      0 (? my --check))))))
