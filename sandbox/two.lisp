@@ -181,10 +181,10 @@
 (defmethod has? ((i num) w v) (or (eq w '?) (<= w v)))
 
 (defun split (data rows y &optional (accum #'make-num)
-                   (kept (keeper)))
-  (dolist (col (? data cols x) (funcall kept))
+                   (keeper (keeping)))
+  (dolist (col (? data cols x) (funcall keeper))
     (let ((at  (? col at))
-          (ys (funcall accum))
+          (ys  (funcall accum))
           (xs  (if (sym-p col) (make-sym) (make-num)))
           xy)
       (loop for r in rows for x = (elt r at) do
@@ -193,9 +193,9 @@
             (add (ats! (? xs has) x accum)
                  (add ys (funcall y r)))
             (push (cons x (add ys (funcall y r))) xy))))
-      (cuts xs xy ys at accum kept))))
+      (cuts xs xy ys at accum keeper))))
 
-(defun keeper (&aux (lo 1e32) kept)
+(defun keeping (&aux (lo 1e32) kept)
   (labels
     ((big? (m n) (<= (? my --leaf) m (- n (? my --leaf))))
      (score (a b)
@@ -207,17 +207,17 @@
           (if (< c lo) (setf lo c kept (list c at v)))))
       kept)))
 
-(defmethod cuts ((i sym) xy ys at accum kept)
+(defmethod cuts ((i sym) xy ys at accum keeper)
   (loop for k being the hash-keys of $has
         using (hash-value this) do
-    (funcall kept this ys at k)))
+    (funcall keeper this ys at k)))
 
-(defmethod cuts ((i num) xy ys at accum kept
+(defmethod cuts ((i num) xy ys at accum keeper
                  &aux (this (funcall accum)))
   (loop for ((x . y) . rest) on (sort xy #'< :key #'car) do
     (add this y)
     (if (and rest (not (eql x (caar rest))))
-      (funcall kept this ys at x))))
+      (funcall keeper this ys at x))))
 
 ;---------------------------------------------------------------
 (defstruct node at v n mid rows yes no)
