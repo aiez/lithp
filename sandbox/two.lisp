@@ -105,36 +105,30 @@
   row)
 
 ;---------------------------------------------------------------
-(defun minkowski (vals &optional (p (? my --p)))
-  (expt (/ (loop for v in vals sum (expt v p))
-           (max 1 (length vals)))
-        (/ 1 p)))
+(defun minkowski (row cols fun &aux (n 1e-32) (d 0))
+  (dolist (col cols (expt (/ d n) (/ 1 (? my --p))))
+    (let ((v (elt row (? col at))))
+      (unless (eq v '?)
+        (setf n (1+ n)
+              d (+ d (expt (funcall fun col v)
+                           (? my --p))))))))
 
-(defmethod gap ((i sym) u v)
-  (cond ((and (eq u '?) (eq v '?)) 1)
-        ((equal u v)               0)
-        (t                         1)))
+(defmethod gap ((i sym) u v) (if (equal u v) 0 1))
 
 (defmethod gap ((i num) u v)
-  (let ((u (unless (eq u '?) (norm i u)))
-        (v (unless (eq v '?) (norm i v))))
-    (cond ((and u v) (abs (- u v)))
-          (u         (abs (- u (if (< u .5) 1 0))))
-          (v         (abs (- v (if (< v .5) 1 0))))
-          (t         1))))
+  (let* ((u (norm i u))
+         (v (if (eq v '?)
+              (if (< u .5) 1 0)
+              (norm i v))))
+    (abs (- u v))))
 
 (defun disty (data row)
-  (minkowski
-    (loop for col in (? data cols y)
-          for v = (elt row (? col at))
-          unless (eq v '?)
-          collect (abs (- (norm col v) (? col w))))))
+  (minkowski row (? data cols y)
+    (lambda (col v) (abs (- (norm col v) (? col w))))))
 
 (defun distx (data r1 r2)
-  (minkowski
-    (loop for col in (? data cols x)
-          collect (gap col (elt r1 (? col at))
-                       (elt r2 (? col at))))))
+  (minkowski r1 (? data cols x)
+    (lambda (col u) (gap col u (elt r2 (? col at))))))
 
 ;---------------------------------------------------------------
 (defun project (rows x y)
@@ -154,9 +148,10 @@
            (x (a b) (distx data a b)))
     (let ((cap  (- (? my --budget) (? my --check)))
           (rows (? data rows)))
-      (if (equal (? my --landscape) "random")
-        (sort (few rows cap) #'< :key #'y)
-        (active (shuffle rows) cap #'x #'y)))))
+      (sort (if (equal (? my --landscape) "random")
+              (few rows cap)
+              (active (shuffle rows) cap #'x #'y))
+            #'< :key #'y))))
 
 (defun active (pool cap x y &aux (lab (o)))
   (loop while (and (< (hash-table-count lab) cap)
@@ -169,8 +164,7 @@
           (setf pool
                 (nthcdr n (sort pool #'<
                                 :key (project here x y))))))))
-  (sort (loop for r being the hash-values of lab collect r)
-        #'< :key y))
+  (loop for r being the hash-values of lab collect r))
 
 (defun grow! (pool lab cap &aux here (grown 0))
   (dolist (r pool (nreverse here))
