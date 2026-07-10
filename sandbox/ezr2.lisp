@@ -400,6 +400,20 @@ Run any test or study by its flag (e.g. --tree --delta).")
       (max -100 (min 100 (* 100
         (- 1 (/ (- (disty data r) lo) (+ (- b4 lo) 1e-32)))))))))
 
+(defun holdout (data)
+  "budget rig: landscape train -> tree -> best test row"
+  (labels ((y (r) (disty data r)))
+    (let* ((rows  (shuffle (? data rows)))
+           (half  (floor (length rows) 2))
+           (train (subseq rows 0 half))
+           (test  (nthcdr half rows))
+           (got   (landscape (clone data train)))
+           (tr    (tree data got #'y)))
+      (argmin #'y
+              (subseq (sort test #'<
+                            :key (lambda (r) (leaf data tr r)))
+                      0 (? my --check))))))
+
 (defun cliffs (xs ys &aux (gt 0) (lt 0))
   "Cliff's delta effect size, 0..1 (0 = identical)"
   (dolist (x xs)
@@ -433,20 +447,6 @@ Run any test or study by its flag (e.g. --tree --delta).")
        (let ((n (length xs)) (m (length ys)))
          (<= (ks xs ys)
              (* conf (sqrt (/ (+ n m) (* n m))))))))
-
-(defun holdout (data)
-  "budget rig: landscape train -> tree -> best test row"
-  (labels ((y (r) (disty data r)))
-    (let* ((rows  (shuffle (? data rows)))
-           (half  (floor (length rows) 2))
-           (train (subseq rows 0 half))
-           (test  (nthcdr half rows))
-           (got   (landscape (clone data train)))
-           (tr    (tree data got #'y)))
-      (argmin #'y
-              (subseq (sort test #'<
-                            :key (lambda (r) (leaf data tr r)))
-                      0 (? my --check))))))
 
 ;  |  o  |_
 ;  |  |  |_)
